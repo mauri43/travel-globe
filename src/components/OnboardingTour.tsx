@@ -71,6 +71,36 @@ export function OnboardingTour() {
   const updateTargetPosition = useCallback(() => {
     if (!currentStepData) return;
 
+    // Special handling for globe - create a centered circle
+    if (currentStepData.target === '[data-tour-target="globe"]') {
+      // Create a square rect centered on screen, sized to fit the globe
+      const globeSize = Math.min(window.innerHeight * 0.75, window.innerWidth * 0.6);
+      const centerX = window.innerWidth / 2;
+      const centerY = window.innerHeight / 2;
+
+      const customRect = {
+        top: centerY - globeSize / 2,
+        left: centerX - globeSize / 2,
+        width: globeSize,
+        height: globeSize,
+        bottom: centerY + globeSize / 2,
+        right: centerX + globeSize / 2,
+        x: centerX - globeSize / 2,
+        y: centerY - globeSize / 2,
+        toJSON: () => ({})
+      } as DOMRect;
+
+      setTargetRect(customRect);
+      lastRectRef.current = {
+        top: customRect.top - 8,
+        left: customRect.left - 8,
+        width: customRect.width + 16,
+        height: customRect.height + 16,
+      };
+      setIsTransitioning(false);
+      return;
+    }
+
     const element = document.querySelector(currentStepData.target);
     if (element) {
       const rect = element.getBoundingClientRect();
