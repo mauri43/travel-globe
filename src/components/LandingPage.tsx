@@ -10,8 +10,8 @@ export function LandingPage() {
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       setMousePosition({
-        x: (e.clientX / window.innerWidth - 0.5) * 30,
-        y: (e.clientY / window.innerHeight - 0.5) * 30,
+        x: (e.clientX / window.innerWidth - 0.5) * 60,
+        y: (e.clientY / window.innerHeight - 0.5) * 60,
       });
     };
     window.addEventListener('mousemove', handleMouseMove);
