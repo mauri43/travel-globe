@@ -171,8 +171,11 @@ export function OnboardingTour() {
     return `tour-arrow-${currentStepData.position}`;
   };
 
-  // Don't render if tour is not active or step data is missing
-  if (!isTourActive || !currentStepData) return null;
+  if (!isTourActive) return null;
+
+  // Fallback if step data is somehow missing
+  const stepTitle = currentStepData?.title || 'Welcome';
+  const stepDescription = currentStepData?.description || 'Let us show you around!';
 
   return (
     <div className="tour-overlay" role="dialog" aria-modal="true">
@@ -194,21 +197,18 @@ export function OnboardingTour() {
         />
       )}
 
-      {/* Tooltip - always visible */}
+      {/* Tooltip */}
       <div
         className="tour-tooltip"
-        style={{
-          ...getTooltipStyle(),
-          zIndex: 10002,
-        }}
+        style={getTooltipStyle()}
       >
         {/* Arrow pointing to target */}
-        {targetRect && <div className={`tour-arrow ${getArrowClass()}`} />}
+        {targetRect && currentStepData && <div className={`tour-arrow ${getArrowClass()}`} />}
 
         {/* Content */}
         <div className="tour-content">
-          <h3 className="tour-title">{currentStepData.title}</h3>
-          <p className="tour-description">{currentStepData.description}</p>
+          <h3 className="tour-title">{stepTitle}</h3>
+          <p className="tour-description">{stepDescription}</p>
 
           {/* Progress dots */}
           <div className="tour-progress">
