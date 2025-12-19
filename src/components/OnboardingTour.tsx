@@ -12,9 +12,9 @@ interface TourStep {
 
 const TOUR_STEPS: TourStep[] = [
   {
-    target: '[data-tour-target="globe"]',
-    title: 'Interactive 3D Globe',
-    description: 'Drag to rotate and explore your travel memories. Scroll to zoom in and out. Each glowing marker represents a place you\'ve visited.',
+    target: '', // No target - shows centered tooltip for welcome/globe intro
+    title: 'Welcome to Travel Globe!',
+    description: 'This is your interactive 3D globe. Drag to rotate and explore your travel memories. Scroll to zoom in and out. Each glowing marker represents a place you\'ve visited.',
     position: 'bottom'
   },
   {
@@ -66,6 +66,12 @@ export function OnboardingTour() {
   // Update target element position
   const updateTargetPosition = useCallback(() => {
     if (!currentStepData) return;
+
+    // If no target specified, center the tooltip
+    if (!currentStepData.target) {
+      setTargetRect(null);
+      return;
+    }
 
     const element = document.querySelector(currentStepData.target);
     if (element) {
@@ -202,11 +208,7 @@ export function OnboardingTour() {
       {/* Tooltip */}
       <div
         className="tour-tooltip"
-        style={{
-          ...getTooltipStyle(),
-          background: '#1a1a2e',
-          border: '2px solid #00f5ff',
-        }}
+        style={getTooltipStyle()}
       >
         {/* Arrow pointing to target */}
         {targetRect && currentStepData && <div className={`tour-arrow ${getArrowClass()}`} />}
