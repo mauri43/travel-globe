@@ -59,6 +59,27 @@ router.put('/trusted-emails', requireAuth, async (req: AuthRequest, res: Respons
   }
 });
 
+// Update tour completion status
+router.put('/tour-completed', requireAuth, async (req: AuthRequest, res: Response) => {
+  try {
+    const { tourCompleted } = req.body;
+
+    if (typeof tourCompleted !== 'boolean') {
+      return res.status(400).json({ error: 'tourCompleted must be a boolean' });
+    }
+
+    await db().collection('users').doc(req.user!.uid).set({
+      tourCompleted,
+      updatedAt: new Date().toISOString(),
+    }, { merge: true });
+
+    res.json({ tourCompleted });
+  } catch (error) {
+    console.error('Error updating tour status:', error);
+    res.status(500).json({ error: 'Failed to update tour status' });
+  }
+});
+
 // Delete account and all data
 router.delete('/account', requireAuth, async (req: AuthRequest, res: Response) => {
   try {

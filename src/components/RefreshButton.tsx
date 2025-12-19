@@ -12,6 +12,7 @@ export function RefreshButton() {
       onClick={refreshCities}
       disabled={isRefreshing}
       title="Check for new trips"
+      data-tour-target="refresh"
     >
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
         <path d="M23 4v6h-6" />

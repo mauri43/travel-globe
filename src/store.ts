@@ -160,6 +160,7 @@ interface ExtendedAppState extends AppState {
   isLoggedIn: boolean;
   isLoading: boolean;
   isRefreshing: boolean;
+  isTourActive: boolean;
   setLoggedIn: (loggedIn: boolean) => void;
   setLoading: (loading: boolean) => void;
   setCities: (cities: City[]) => void;
@@ -168,6 +169,8 @@ interface ExtendedAppState extends AppState {
   addCityWithApi: (city: Omit<City, 'id'>) => Promise<City>;
   updateCityWithApi: (id: string, updates: Partial<City>) => Promise<void>;
   deleteCityWithApi: (id: string) => Promise<void>;
+  startTour: () => void;
+  endTour: () => void;
 }
 
 export const useStore = create<ExtendedAppState>()(
@@ -182,6 +185,7 @@ export const useStore = create<ExtendedAppState>()(
       isLoggedIn: false,
       isLoading: false,
       isRefreshing: false,
+      isTourActive: false,
 
       setLoggedIn: (loggedIn) => set({ isLoggedIn: loggedIn }),
       setLoading: (loading) => set({ isLoading: loading }),
@@ -267,6 +271,8 @@ export const useStore = create<ExtendedAppState>()(
             ? state.activeTagFilters.filter((t) => t !== tag)
             : [...state.activeTagFilters, tag],
         })),
+      startTour: () => set({ isTourActive: true }),
+      endTour: () => set({ isTourActive: false }),
     }),
     {
       name: 'travel-globe-storage',

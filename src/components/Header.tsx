@@ -50,6 +50,7 @@ export function Header() {
             className="places-list-btn"
             onClick={() => setPlacesListOpen(true)}
             title="View all places"
+            data-tour-target="places-list"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <line x1="3" y1="6" x2="21" y2="6" />
@@ -59,7 +60,7 @@ export function Header() {
             <span>My Places</span>
           </button>
         </div>
-        <div className="stats-container">
+        <div className="stats-container" data-tour-target="stats">
           <div className="stats">
             <div className="stat">
               <span className="stat-value">{cities.length}</span>

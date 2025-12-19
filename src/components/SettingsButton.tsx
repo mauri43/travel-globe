@@ -15,6 +15,7 @@ export function SettingsButton({ onClick }: SettingsButtonProps) {
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
       title="Settings"
+      data-tour-target="settings"
     >
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
         <circle cx="12" cy="12" r="3" />

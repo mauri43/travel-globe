@@ -33,7 +33,7 @@ export function TagFilter() {
   if (allTags.length === 0) return null;
 
   return (
-    <div className="tag-filter">
+    <div className="tag-filter" data-tour-target="tag-filter">
       <button
         className={`tag-filter-btn ${activeTagFilters.length > 0 ? 'has-filters' : ''}`}
         onClick={() => setIsOpen(!isOpen)}

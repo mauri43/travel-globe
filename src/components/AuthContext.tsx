@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useRef, type ReactNode } from 'react';
 import { onAuthChange, login, signup, logout, type User } from '../services/firebase';
 import { useStore } from '../store';
+import { getUserProfile } from '../services/api';
 
 interface AuthContextType {
   user: User | null;
@@ -40,10 +41,12 @@ const sampleCities = [
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const { setLoggedIn, setCities, loadCitiesFromApi } = useStore();
+  const { setLoggedIn, setCities, loadCitiesFromApi, startTour } = useStore();
   const previousUser = useRef<User | null>(null);
 
   useEffect(() => {
+    let tourTimeout: ReturnType<typeof setTimeout> | null = null;
+
     const unsubscribe = onAuthChange(async (newUser) => {
       const wasLoggedIn = !!previousUser.current;
       const isNowLoggedIn = !!newUser;
@@ -54,6 +57,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (isNowLoggedIn && !wasLoggedIn) {
         // User just logged in - load cities from API
         await loadCitiesFromApi();
+
+        // Check if user needs to see the onboarding tour
+        try {
+          const profile = await getUserProfile();
+          if (!profile.tourCompleted) {
+            // Delay tour start slightly to let UI settle
+            tourTimeout = setTimeout(() => startTour(), 500);
+          }
+        } catch (err) {
+          // Profile doesn't exist yet (new user), start tour
+          tourTimeout = setTimeout(() => startTour(), 500);
+        }
       } else if (!isNowLoggedIn && wasLoggedIn) {
         // User just logged out - reset to sample cities
         setCities(sampleCities);
@@ -63,8 +78,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     });
 
-    return () => unsubscribe();
-  }, [setLoggedIn, setCities, loadCitiesFromApi]);
+    return () => {
+      unsubscribe();
+      if (tourTimeout) {
+        clearTimeout(tourTimeout);
+      }
+    };
+  }, [setLoggedIn, setCities, loadCitiesFromApi, startTour]);
 
   const handleLogin = async (email: string, password: string) => {
     await login(email, password);

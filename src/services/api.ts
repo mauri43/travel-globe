@@ -164,3 +164,10 @@ export async function deleteAccount() {
     method: 'DELETE',
   });
 }
+
+export async function updateTourCompleted(completed: boolean) {
+  return fetchWithAuth('/api/auth/tour-completed', {
+    method: 'PUT',
+    body: JSON.stringify({ tourCompleted: completed }),
+  });
+}

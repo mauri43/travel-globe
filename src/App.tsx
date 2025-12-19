@@ -10,6 +10,7 @@ import { RefreshButton } from './components/RefreshButton';
 import { LandingPage } from './components/LandingPage';
 import { SettingsButton } from './components/SettingsButton';
 import { SettingsPanel } from './components/SettingsPanel';
+import { OnboardingTour } from './components/OnboardingTour';
 import { useAuth } from './components/AuthContext';
 import './App.css';
 
@@ -70,6 +71,9 @@ function App() {
 
       {/* Places List Sidebar */}
       <PlacesList />
+
+      {/* Onboarding Tour */}
+      <OnboardingTour />
 
       {/* Footer */}
       <footer className="footer">

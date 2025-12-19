@@ -15,7 +15,7 @@ function LoadingFallback() {
 
 export function Scene() {
   return (
-    <div className="canvas-container">
+    <div className="canvas-container" data-tour-target="globe">
       <Canvas
         gl={{
           antialias: true,

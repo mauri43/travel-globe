@@ -13,6 +13,7 @@ export function AddButton() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.5 }}
+      data-tour-target="add-button"
     >
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
         <line x1="12" y1="5" x2="12" y2="19" />
