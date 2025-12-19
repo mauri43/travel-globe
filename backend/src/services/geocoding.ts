@@ -116,7 +116,13 @@ export async function geocodeCity(cityName: string): Promise<GeocodedLocation | 
   try {
     const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(cityName)}&key=${apiKey}`;
     const response = await fetch(url);
-    const data = await response.json();
+    const data = await response.json() as {
+      status: string;
+      results: Array<{
+        geometry: { location: { lat: number; lng: number } };
+        address_components: Array<{ long_name: string; types: string[] }>;
+      }>;
+    };
 
     if (data.status === 'OK' && data.results.length > 0) {
       const result = data.results[0];
