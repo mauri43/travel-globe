@@ -42,45 +42,6 @@ const glowFragmentShader = `
   }
 `;
 
-// Ocean depth shader - creates a deep blue gradient effect
-const oceanVertexShader = `
-  varying vec3 vNormal;
-  varying vec3 vPosition;
-  varying vec2 vUv;
-
-  void main() {
-    vNormal = normalize(normalMatrix * normal);
-    vPosition = position;
-    vUv = uv;
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-  }
-`;
-
-const oceanFragmentShader = `
-  uniform vec3 deepColor;
-  uniform vec3 shallowColor;
-  uniform vec3 viewPosition;
-  varying vec3 vNormal;
-  varying vec3 vPosition;
-  varying vec2 vUv;
-
-  void main() {
-    // Create depth effect based on view angle
-    vec3 viewDir = normalize(viewPosition - vPosition);
-    float fresnel = pow(1.0 - max(dot(vNormal, viewDir), 0.0), 2.0);
-
-    // Mix colors based on position and fresnel
-    float depthFactor = 0.5 + 0.5 * vPosition.y / 2.0; // Varies with latitude
-    vec3 oceanColor = mix(deepColor, shallowColor, fresnel * 0.5 + depthFactor * 0.3);
-
-    // Add subtle variation
-    float noise = fract(sin(dot(vUv * 100.0, vec2(12.9898, 78.233))) * 43758.5453);
-    oceanColor += noise * 0.008;
-
-    gl_FragColor = vec4(oceanColor, 1.0);
-  }
-`;
-
 export function Globe() {
   const globeRef = useRef<THREE.Group>(null);
   const glowRef = useRef<THREE.Mesh>(null);
@@ -149,16 +110,10 @@ export function Globe() {
     return origins;
   }, [filteredCities]);
 
-  // Ocean material for deep blue water effect
+  // Ocean material for deep blue water effect - using MeshBasicMaterial for reliability
   const oceanMaterial = useMemo(() => {
-    return new THREE.ShaderMaterial({
-      uniforms: {
-        deepColor: { value: new THREE.Color(0x050a12) },     // Very deep navy
-        shallowColor: { value: new THREE.Color(0x0d1a2d) },  // Slightly lighter blue
-        viewPosition: { value: new THREE.Vector3(0, 0, 5) },
-      },
-      vertexShader: oceanVertexShader,
-      fragmentShader: oceanFragmentShader,
+    return new THREE.MeshBasicMaterial({
+      color: new THREE.Color(0x0a1628), // Deep navy blue
     });
   }, []);
 
