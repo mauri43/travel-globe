@@ -171,7 +171,8 @@ export function OnboardingTour() {
     return `tour-arrow-${currentStepData.position}`;
   };
 
-  if (!isTourActive) return null;
+  // Don't render if tour is not active or step data is missing
+  if (!isTourActive || !currentStepData) return null;
 
   return (
     <div className="tour-overlay" role="dialog" aria-modal="true">
@@ -193,10 +194,13 @@ export function OnboardingTour() {
         />
       )}
 
-      {/* Tooltip */}
+      {/* Tooltip - always visible */}
       <div
         className="tour-tooltip"
-        style={getTooltipStyle()}
+        style={{
+          ...getTooltipStyle(),
+          zIndex: 10002,
+        }}
       >
         {/* Arrow pointing to target */}
         {targetRect && <div className={`tour-arrow ${getArrowClass()}`} />}

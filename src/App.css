@@ -3294,6 +3294,7 @@ body {
   inset: 0;
   background: rgba(0, 0, 0, 0.85);
   backdrop-filter: blur(2px);
+  z-index: 10000;
 }
 
 .tour-spotlight {
