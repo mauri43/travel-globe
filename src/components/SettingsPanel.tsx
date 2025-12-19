@@ -63,8 +63,9 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
       setNewEmail('');
       setSuccessMessage('Email added successfully');
       setTimeout(() => setSuccessMessage(''), 3000);
-    } catch (err) {
-      setError('Failed to add email. Please try again.');
+    } catch (err: any) {
+      console.error('Add email error:', err);
+      setError(err.message || 'Failed to add email. Please try again.');
     } finally {
       setIsSaving(false);
     }
@@ -85,8 +86,9 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
       setTrustedEmails(updatedEmails);
       setSuccessMessage('Email removed');
       setTimeout(() => setSuccessMessage(''), 3000);
-    } catch (err) {
-      setError('Failed to remove email. Please try again.');
+    } catch (err: any) {
+      console.error('Remove email error:', err);
+      setError(err.message || 'Failed to remove email. Please try again.');
     } finally {
       setIsSaving(false);
     }
