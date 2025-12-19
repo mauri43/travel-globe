@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { AuthModal } from './AuthModal';
 
@@ -10,8 +10,8 @@ export function LandingPage() {
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       setMousePosition({
-        x: (e.clientX / window.innerWidth - 0.5) * 6,
-        y: (e.clientY / window.innerHeight - 0.5) * 6,
+        x: (e.clientX / window.innerWidth - 0.5) * 30,
+        y: (e.clientY / window.innerHeight - 0.5) * 30,
       });
     };
     window.addEventListener('mousemove', handleMouseMove);
@@ -23,51 +23,70 @@ export function LandingPage() {
     setShowAuthModal(true);
   };
 
-  // Generate stars
-  const stars = Array.from({ length: 150 }, (_, i) => ({
+  // Generate stars once and memoize them
+  const stars = useMemo(() => Array.from({ length: 150 }, (_, i) => ({
     id: i,
     x: Math.random() * 100,
     y: Math.random() * 100,
     size: Math.random() * 2 + 1,
     delay: Math.random() * 3,
     duration: Math.random() * 2 + 2,
-  }));
+    depth: Math.random(), // 0 = far (moves less), 1 = close (moves more)
+  })), []);
 
-  // Generate floating particles
-  const particles = Array.from({ length: 20 }, (_, i) => ({
+  // Generate floating particles once
+  const particles = useMemo(() => Array.from({ length: 20 }, (_, i) => ({
     id: i,
     x: Math.random() * 100,
     size: Math.random() * 4 + 2,
     duration: Math.random() * 10 + 15,
     delay: Math.random() * 10,
-  }));
+  })), []);
 
   return (
     <div className="landing-page">
-      {/* Animated star background */}
+      {/* Animated star background with parallax */}
       <div className="stars-container">
-        {stars.map((star) => (
-          <motion.div
-            key={star.id}
-            className="star"
-            style={{
-              left: `${star.x}%`,
-              top: `${star.y}%`,
-              width: star.size,
-              height: star.size,
-            }}
-            animate={{
-              opacity: [0.2, 1, 0.2],
-              scale: [1, 1.2, 1],
-            }}
-            transition={{
-              duration: star.duration,
-              delay: star.delay,
-              repeat: Infinity,
-              ease: 'easeInOut',
-            }}
-          />
-        ))}
+        {stars.map((star) => {
+          // Parallax: closer stars (depth=1) move more, farther stars (depth=0) move less
+          const parallaxX = mousePosition.x * (0.2 + star.depth * 0.8);
+          const parallaxY = mousePosition.y * (0.2 + star.depth * 0.8);
+
+          return (
+            <motion.div
+              key={star.id}
+              className="star"
+              style={{
+                left: `${star.x}%`,
+                top: `${star.y}%`,
+                width: star.size,
+                height: star.size,
+              }}
+              animate={{
+                opacity: [0.2, 1, 0.2],
+                scale: [1, 1.2, 1],
+                x: parallaxX,
+                y: parallaxY,
+              }}
+              transition={{
+                opacity: {
+                  duration: star.duration,
+                  delay: star.delay,
+                  repeat: Infinity,
+                  ease: 'easeInOut',
+                },
+                scale: {
+                  duration: star.duration,
+                  delay: star.delay,
+                  repeat: Infinity,
+                  ease: 'easeInOut',
+                },
+                x: { type: 'spring', stiffness: 100, damping: 30 },
+                y: { type: 'spring', stiffness: 100, damping: 30 },
+              }}
+            />
+          );
+        })}
       </div>
 
       {/* Floating particles */}
