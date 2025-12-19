@@ -187,10 +187,10 @@ export function OnboardingTour() {
 
   return (
     <div className="tour-overlay" role="dialog" aria-modal="true">
-      {/* Dark backdrop */}
-      <div className="tour-backdrop" />
+      {/* Dark backdrop - only show when no spotlight (centered welcome message) */}
+      {!targetRect && <div className="tour-backdrop" />}
 
-      {/* Spotlight highlight around target element */}
+      {/* Spotlight highlight around target element - box-shadow creates the dark overlay */}
       {targetRect && (
         <motion.div
           className="tour-spotlight"
