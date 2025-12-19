@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Globe Style Options - Detailed</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #0a0a12;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 10px;
+      font-size: 1.8rem;
+      background: linear-gradient(135deg, #00f5ff, #7b68ee);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #666;
+      margin-bottom: 40px;
+      font-size: 0.95rem;
+    }
+
+    .options {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 60px;
+      max-width: 1100px;
+    }
+
+    .option {
+      text-align: center;
+    }
+
+    .option h2 {
+      font-size: 1.2rem;
+      margin-bottom: 8px;
+      color: #fff;
+    }
+
+    .option p {
+      color: #888;
+      font-size: 0.85rem;
+      margin-bottom: 25px;
+      line-height: 1.5;
+      max-width: 400px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .globe-wrapper {
+      position: relative;
+      width: 450px;
+      height: 450px;
+      margin: 0 auto;
+    }
+
+    canvas {
+      border-radius: 50%;
+      box-shadow:
+        0 0 60px rgba(0, 245, 255, 0.15),
+        0 0 120px rgba(0, 245, 255, 0.05);
+    }
+
+    .label {
+      position: absolute;
+      font-size: 0.7rem;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+  </style>
+</head>
+<body>
+  <h1>Land/Water Differentiation</h1>
+  <p class="subtitle">More accurate mockups showing how each style would look</p>
+
+  <div class="options">
+    <div class="option">
+      <h2>Option 1: Subtle Land Fill</h2>
+      <p>Land masses have a subtle dark charcoal fill (#1a1d24), water remains pure black. Maintains the dark aesthetic while clearly showing continents.</p>
+      <div class="globe-wrapper">
+        <canvas id="globe1" width="450" height="450"></canvas>
+      </div>
+    </div>
+
+    <div class="option">
+      <h2>Option 2: Ocean Depth</h2>
+      <p>Water has a deep navy blue tint with subtle gradient, land stays black. Creates an atmospheric oceanic depth effect.</p>
+      <div class="globe-wrapper">
+        <canvas id="globe2" width="450" height="450"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // More accurate continent paths (simplified but recognizable)
+    // These are rough polygon approximations for a front-facing globe view
+
+    const continentPaths = {
+      northAmerica: [
+        [0.15, 0.18], [0.22, 0.15], [0.28, 0.18], [0.35, 0.20], [0.38, 0.25],
+        [0.40, 0.32], [0.38, 0.38], [0.35, 0.42], [0.30, 0.45], [0.28, 0.42],
+        [0.25, 0.45], [0.22, 0.48], [0.18, 0.45], [0.15, 0.42], [0.12, 0.38],
+        [0.10, 0.32], [0.08, 0.25], [0.10, 0.20], [0.15, 0.18]
+      ],
+      centralAmerica: [
+        [0.22, 0.48], [0.24, 0.50], [0.26, 0.54], [0.25, 0.58], [0.23, 0.56],
+        [0.21, 0.52], [0.22, 0.48]
+      ],
+      southAmerica: [
+        [0.25, 0.58], [0.30, 0.60], [0.34, 0.65], [0.35, 0.72], [0.33, 0.80],
+        [0.30, 0.85], [0.27, 0.82], [0.25, 0.75], [0.23, 0.68], [0.22, 0.62],
+        [0.25, 0.58]
+      ],
+      europe: [
+        [0.48, 0.22], [0.52, 0.20], [0.56, 0.22], [0.58, 0.26], [0.56, 0.30],
+        [0.54, 0.34], [0.50, 0.36], [0.46, 0.34], [0.44, 0.30], [0.45, 0.26],
+        [0.48, 0.22]
+      ],
+      africa: [
+        [0.46, 0.38], [0.52, 0.36], [0.58, 0.40], [0.60, 0.48], [0.58, 0.58],
+        [0.54, 0.68], [0.50, 0.72], [0.46, 0.68], [0.44, 0.58], [0.42, 0.48],
+        [0.44, 0.42], [0.46, 0.38]
+      ],
+      asia: [
+        [0.58, 0.18], [0.65, 0.15], [0.75, 0.18], [0.82, 0.22], [0.88, 0.28],
+        [0.90, 0.35], [0.88, 0.42], [0.82, 0.48], [0.75, 0.45], [0.70, 0.42],
+        [0.65, 0.45], [0.60, 0.42], [0.58, 0.38], [0.60, 0.32], [0.58, 0.26],
+        [0.58, 0.18]
+      ],
+      india: [
+        [0.68, 0.45], [0.72, 0.48], [0.70, 0.55], [0.66, 0.52], [0.68, 0.45]
+      ],
+      australia: [
+        [0.78, 0.62], [0.85, 0.60], [0.90, 0.65], [0.88, 0.72], [0.82, 0.75],
+        [0.76, 0.72], [0.75, 0.66], [0.78, 0.62]
+      ],
+      greenland: [
+        [0.38, 0.12], [0.42, 0.10], [0.46, 0.12], [0.45, 0.18], [0.42, 0.20],
+        [0.38, 0.18], [0.38, 0.12]
+      ],
+      uk: [
+        [0.46, 0.24], [0.48, 0.22], [0.48, 0.28], [0.46, 0.28], [0.46, 0.24]
+      ],
+      japan: [
+        [0.88, 0.32], [0.90, 0.30], [0.91, 0.35], [0.89, 0.38], [0.88, 0.32]
+      ],
+      indonesia: [
+        [0.80, 0.52], [0.86, 0.50], [0.88, 0.54], [0.84, 0.56], [0.80, 0.52]
+      ]
+    };
+
+    function drawGlobe(canvasId, style) {
+      const canvas = document.getElementById(canvasId);
+      const ctx = canvas.getContext('2d');
+      const size = 450;
+      const centerX = size / 2;
+      const centerY = size / 2;
+      const radius = size / 2 - 10;
+
+      // Clear canvas
+      ctx.clearRect(0, 0, size, size);
+
+      // Draw globe base (ocean)
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+
+      if (style === 'ocean') {
+        // Option 2: Deep ocean gradient
+        const oceanGradient = ctx.createRadialGradient(
+          centerX - radius * 0.3, centerY - radius * 0.3, 0,
+          centerX, centerY, radius
+        );
+        oceanGradient.addColorStop(0, '#0d1a2d');
+        oceanGradient.addColorStop(0.5, '#0a1525');
+        oceanGradient.addColorStop(0.8, '#070f1a');
+        oceanGradient.addColorStop(1, '#050a12');
+        ctx.fillStyle = oceanGradient;
+      } else {
+        // Option 1: Pure black ocean
+        ctx.fillStyle = '#0a0a12';
+      }
+      ctx.fill();
+
+      // Clip to globe
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, radius - 1, 0, Math.PI * 2);
+      ctx.clip();
+
+      // Draw continents
+      function drawContinent(points, landColor, borderColor) {
+        if (points.length < 3) return;
+
+        ctx.beginPath();
+        ctx.moveTo(points[0][0] * size, points[0][1] * size);
+
+        for (let i = 1; i < points.length; i++) {
+          ctx.lineTo(points[i][0] * size, points[i][1] * size);
+        }
+        ctx.closePath();
+
+        ctx.fillStyle = landColor;
+        ctx.fill();
+
+        ctx.strokeStyle = borderColor;
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+      }
+
+      const landColor = style === 'ocean' ? '#0a0a12' : '#1a1d24';
+      const borderColor = 'rgba(0, 245, 255, 0.5)';
+
+      // Draw all continents
+      Object.values(continentPaths).forEach(path => {
+        drawContinent(path, landColor, borderColor);
+      });
+
+      ctx.restore();
+
+      // Subtle grid lines (latitude/longitude) - very faint
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, radius - 1, 0, Math.PI * 2);
+      ctx.clip();
+
+      ctx.strokeStyle = 'rgba(0, 245, 255, 0.06)';
+      ctx.lineWidth = 0.5;
+
+      // Latitude lines
+      for (let i = 1; i < 6; i++) {
+        const y = centerY - radius + (i * radius * 2 / 6);
+        const xOffset = Math.sqrt(radius * radius - Math.pow(y - centerY, 2));
+        ctx.beginPath();
+        ctx.moveTo(centerX - xOffset, y);
+        ctx.lineTo(centerX + xOffset, y);
+        ctx.stroke();
+      }
+
+      // Longitude lines (curved)
+      for (let i = 1; i < 8; i++) {
+        const angle = (i * Math.PI / 8) - Math.PI / 2;
+        ctx.beginPath();
+        ctx.ellipse(centerX, centerY, Math.abs(Math.cos(angle)) * radius, radius, 0, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      ctx.restore();
+
+      // Atmosphere glow
+      const glowGradient = ctx.createRadialGradient(
+        centerX, centerY, radius - 20,
+        centerX, centerY, radius + 25
+      );
+      glowGradient.addColorStop(0, 'rgba(0, 245, 255, 0)');
+      glowGradient.addColorStop(0.4, 'rgba(0, 245, 255, 0.08)');
+      glowGradient.addColorStop(0.7, 'rgba(0, 245, 255, 0.04)');
+      glowGradient.addColorStop(1, 'rgba(0, 245, 255, 0)');
+
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, radius + 25, 0, Math.PI * 2);
+      ctx.fillStyle = glowGradient;
+      ctx.fill();
+
+      // Draw sample markers
+      const markers = [
+        { x: 0.20, y: 0.32, us: true, label: 'NYC' },
+        { x: 0.15, y: 0.38, us: true, label: 'LA' },
+        { x: 0.50, y: 0.28, us: false, label: 'London' },
+        { x: 0.52, y: 0.50, us: false, label: 'Lagos' },
+        { x: 0.75, y: 0.35, us: false, label: 'Tokyo' },
+        { x: 0.30, y: 0.70, us: false, label: 'São Paulo' },
+        { x: 0.82, y: 0.68, us: false, label: 'Sydney' },
+      ];
+
+      markers.forEach(m => {
+        const mx = m.x * size;
+        const my = m.y * size;
+        const pinHeight = m.us ? 18 : 36;
+        const color = m.us ? '#4a90d9' : '#ff6b35';
+        const glowColor = m.us ? 'rgba(74, 144, 217, 0.3)' : 'rgba(255, 107, 53, 0.3)';
+
+        // Base glow ring
+        ctx.beginPath();
+        ctx.arc(mx, my, 8, 0, Math.PI * 2);
+        ctx.fillStyle = glowColor;
+        ctx.fill();
+
+        // Pin line
+        ctx.beginPath();
+        ctx.moveTo(mx, my);
+        ctx.lineTo(mx, my - pinHeight);
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2.5;
+        ctx.lineCap = 'round';
+        ctx.stroke();
+
+        // Pin head glow
+        ctx.beginPath();
+        ctx.arc(mx, my - pinHeight, 10, 0, Math.PI * 2);
+        ctx.fillStyle = glowColor;
+        ctx.fill();
+
+        // Pin head
+        ctx.beginPath();
+        ctx.arc(mx, my - pinHeight, 6, 0, Math.PI * 2);
+        ctx.fillStyle = color;
+        ctx.fill();
+      });
+
+      // Draw a flight path
+      ctx.beginPath();
+      ctx.moveTo(0.20 * size, 0.32 * size - 18);
+      ctx.quadraticCurveTo(0.35 * size, 0.15 * size, 0.50 * size, 0.28 * size - 36);
+      ctx.strokeStyle = 'rgba(255, 107, 53, 0.4)';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([6, 6]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Small plane icon on path
+      const planeX = 0.38 * size;
+      const planeY = 0.18 * size;
+      ctx.save();
+      ctx.translate(planeX, planeY);
+      ctx.rotate(-0.5);
+      ctx.fillStyle = '#fff';
+      ctx.beginPath();
+      ctx.moveTo(0, -6);
+      ctx.lineTo(4, 6);
+      ctx.lineTo(0, 4);
+      ctx.lineTo(-4, 6);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // Draw both globes
+    drawGlobe('globe1', 'subtle');
+    drawGlobe('globe2', 'ocean');
+  </script>
+</body>
+</html>

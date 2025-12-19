@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Globe Style Options</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #0a0a12;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      min-height: 100vh;
+      padding: 40px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      font-size: 2rem;
+      background: linear-gradient(135deg, #00f5ff, #7b68ee);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #888;
+      margin-bottom: 50px;
+    }
+
+    .options {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 40px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .option {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 30px;
+      text-align: center;
+    }
+
+    .option h2 {
+      font-size: 1.3rem;
+      margin-bottom: 10px;
+      color: #00f5ff;
+    }
+
+    .option p {
+      color: #888;
+      font-size: 0.9rem;
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+
+    .globe-container {
+      width: 280px;
+      height: 280px;
+      margin: 0 auto 20px;
+      position: relative;
+    }
+
+    canvas {
+      border-radius: 50%;
+    }
+
+    .pros-cons {
+      text-align: left;
+      font-size: 0.85rem;
+    }
+
+    .pros-cons h4 {
+      color: #4ade80;
+      margin-bottom: 5px;
+      font-size: 0.8rem;
+    }
+
+    .pros-cons h4.cons {
+      color: #f87171;
+      margin-top: 10px;
+    }
+
+    .pros-cons ul {
+      list-style: none;
+      color: #aaa;
+    }
+
+    .pros-cons li {
+      padding: 3px 0;
+    }
+
+    .pros-cons li::before {
+      content: "•";
+      margin-right: 8px;
+      color: #666;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      margin-bottom: 15px;
+    }
+
+    .badge.recommended {
+      background: rgba(74, 222, 128, 0.2);
+      color: #4ade80;
+    }
+
+    .badge.minimal {
+      background: rgba(0, 245, 255, 0.2);
+      color: #00f5ff;
+    }
+
+    .badge.detailed {
+      background: rgba(167, 139, 250, 0.2);
+      color: #a78bfa;
+    }
+  </style>
+</head>
+<body>
+  <h1>Globe Land/Water Differentiation Options</h1>
+  <p class="subtitle">Choose a style for distinguishing land from water on the globe</p>
+
+  <div class="options">
+    <!-- Option 1: Subtle Fill -->
+    <div class="option">
+      <span class="badge recommended">Recommended</span>
+      <h2>Option 1: Subtle Land Fill</h2>
+      <p>Land masses have a subtle dark fill, water remains black. Clean and minimal.</p>
+      <div class="globe-container">
+        <canvas id="globe1" width="280" height="280"></canvas>
+      </div>
+      <div class="pros-cons">
+        <h4>Pros</h4>
+        <ul>
+          <li>Maintains dark aesthetic</li>
+          <li>Clear land/water distinction</li>
+          <li>Markers still pop</li>
+        </ul>
+        <h4 class="cons">Cons</h4>
+        <ul>
+          <li>Subtle - may need adjustment</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Option 2: Ocean Glow -->
+    <div class="option">
+      <span class="badge minimal">Atmospheric</span>
+      <h2>Option 2: Ocean Depth Glow</h2>
+      <p>Water has a deep blue tint, land stays dark. Creates depth effect.</p>
+      <div class="globe-container">
+        <canvas id="globe2" width="280" height="280"></canvas>
+      </div>
+      <div class="pros-cons">
+        <h4>Pros</h4>
+        <ul>
+          <li>Beautiful ocean depth effect</li>
+          <li>More atmospheric</li>
+          <li>Natural looking</li>
+        </ul>
+        <h4 class="cons">Cons</h4>
+        <ul>
+          <li>May compete with cyan glow</li>
+          <li>Slightly busier</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Option 3: Outlined Continents -->
+    <div class="option">
+      <span class="badge detailed">Current + Fill</span>
+      <h2>Option 3: Filled Continents</h2>
+      <p>Keep cyan borders, add semi-transparent fill to land masses.</p>
+      <div class="globe-container">
+        <canvas id="globe3" width="280" height="280"></canvas>
+      </div>
+      <div class="pros-cons">
+        <h4>Pros</h4>
+        <ul>
+          <li>Keeps existing border style</li>
+          <li>Very clear continents</li>
+          <li>Rich appearance</li>
+        </ul>
+        <h4 class="cons">Cons</h4>
+        <ul>
+          <li>More visual complexity</li>
+          <li>May need border adjustment</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Simple continent shapes for mockup (very simplified)
+    const continents = [
+      // North America
+      { cx: 80, cy: 90, rx: 45, ry: 35, rotation: -20 },
+      // South America
+      { cx: 100, cy: 170, rx: 20, ry: 40, rotation: 10 },
+      // Europe
+      { cx: 160, cy: 80, rx: 25, ry: 20, rotation: 0 },
+      // Africa
+      { cx: 160, cy: 140, rx: 25, ry: 35, rotation: 0 },
+      // Asia
+      { cx: 200, cy: 85, rx: 40, ry: 30, rotation: 10 },
+      // Australia
+      { cx: 230, cy: 175, rx: 18, ry: 15, rotation: 0 },
+    ];
+
+    function drawGlobe(canvasId, style) {
+      const canvas = document.getElementById(canvasId);
+      const ctx = canvas.getContext('2d');
+      const centerX = 140;
+      const centerY = 140;
+      const radius = 130;
+
+      // Clear
+      ctx.clearRect(0, 0, 280, 280);
+
+      // Globe base
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+
+      if (style === 'ocean') {
+        // Option 2: Ocean glow
+        const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
+        gradient.addColorStop(0, '#0a1628');
+        gradient.addColorStop(0.7, '#0a1225');
+        gradient.addColorStop(1, '#050a15');
+        ctx.fillStyle = gradient;
+      } else {
+        ctx.fillStyle = '#0a0a12';
+      }
+      ctx.fill();
+
+      // Draw continents
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, radius - 2, 0, Math.PI * 2);
+      ctx.clip();
+
+      continents.forEach(cont => {
+        ctx.save();
+        ctx.translate(cont.cx, cont.cy);
+        ctx.rotate(cont.rotation * Math.PI / 180);
+
+        ctx.beginPath();
+        ctx.ellipse(0, 0, cont.rx, cont.ry, 0, 0, Math.PI * 2);
+
+        if (style === 'subtle') {
+          // Option 1: Subtle fill
+          ctx.fillStyle = 'rgba(30, 35, 45, 0.8)';
+          ctx.fill();
+          ctx.strokeStyle = 'rgba(0, 245, 255, 0.4)';
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        } else if (style === 'ocean') {
+          // Option 2: Dark land on blue ocean
+          ctx.fillStyle = '#0a0a12';
+          ctx.fill();
+          ctx.strokeStyle = 'rgba(0, 245, 255, 0.5)';
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        } else if (style === 'filled') {
+          // Option 3: Filled with border
+          ctx.fillStyle = 'rgba(0, 245, 255, 0.08)';
+          ctx.fill();
+          ctx.strokeStyle = 'rgba(0, 245, 255, 0.6)';
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+        }
+
+        ctx.restore();
+      });
+
+      ctx.restore();
+
+      // Atmosphere glow
+      const glowGradient = ctx.createRadialGradient(centerX, centerY, radius - 10, centerX, centerY, radius + 15);
+      glowGradient.addColorStop(0, 'rgba(0, 245, 255, 0)');
+      glowGradient.addColorStop(0.5, 'rgba(0, 245, 255, 0.1)');
+      glowGradient.addColorStop(1, 'rgba(0, 245, 255, 0)');
+
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, radius + 15, 0, Math.PI * 2);
+      ctx.fillStyle = glowGradient;
+      ctx.fill();
+
+      // Sample markers
+      const markers = [
+        { x: 85, y: 100, us: true },   // US
+        { x: 160, y: 85, us: false },  // Europe
+        { x: 195, y: 95, us: false },  // Asia
+        { x: 100, y: 160, us: false }, // S. America
+      ];
+
+      markers.forEach(m => {
+        // Pin line
+        ctx.beginPath();
+        ctx.moveTo(m.x, m.y);
+        ctx.lineTo(m.x, m.y - (m.us ? 15 : 30));
+        ctx.strokeStyle = m.us ? '#4a90d9' : '#ff6b35';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Pin dot
+        ctx.beginPath();
+        ctx.arc(m.x, m.y - (m.us ? 15 : 30), 5, 0, Math.PI * 2);
+        ctx.fillStyle = m.us ? '#4a90d9' : '#ff6b35';
+        ctx.fill();
+
+        // Glow
+        ctx.beginPath();
+        ctx.arc(m.x, m.y - (m.us ? 15 : 30), 8, 0, Math.PI * 2);
+        ctx.fillStyle = m.us ? 'rgba(74, 144, 217, 0.3)' : 'rgba(255, 107, 53, 0.3)';
+        ctx.fill();
+      });
+
+      // Flight path example
+      ctx.beginPath();
+      ctx.moveTo(85, 100);
+      ctx.quadraticCurveTo(120, 50, 160, 85);
+      ctx.strokeStyle = 'rgba(255, 107, 53, 0.4)';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([4, 4]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    // Draw all three options
+    drawGlobe('globe1', 'subtle');
+    drawGlobe('globe2', 'ocean');
+    drawGlobe('globe3', 'filled');
+  </script>
+</body>
+</html>
