@@ -16,8 +16,21 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Middleware
+const getAllowedOrigins = () => {
+  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+  // Ensure https:// prefix for production URLs
+  const normalizedUrl = frontendUrl.startsWith('http')
+    ? frontendUrl
+    : `https://${frontendUrl}`;
+  return [
+    normalizedUrl,
+    'http://localhost:5173',
+    'https://travel-globe-ten.vercel.app',
+  ];
+};
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: getAllowedOrigins(),
   credentials: true,
 }));
 
