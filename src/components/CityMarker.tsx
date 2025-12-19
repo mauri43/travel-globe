@@ -10,9 +10,12 @@ import { latLngToVector3 } from './Globe';
 interface CityMarkerProps {
   city: City;
   globeRadius: number;
+  isUS?: boolean;
+  isOrigin?: boolean;
+  originName?: string;
 }
 
-export function CityMarker({ city, globeRadius }: CityMarkerProps) {
+export function CityMarker({ city, globeRadius, isUS = false, isOrigin = false, originName }: CityMarkerProps) {
   const markerRef = useRef<THREE.Group>(null);
   const dotRef = useRef<THREE.Mesh>(null);
   const lineRef = useRef<THREE.Mesh>(null);
@@ -33,8 +36,8 @@ export function CityMarker({ city, globeRadius }: CityMarkerProps) {
     return euler;
   }, [position]);
 
-  // Pin height (line length) - taller pins
-  const pinHeight = 0.4;
+  // Pin height - US cities are half height, international full height
+  const pinHeight = isUS ? 0.2 : 0.4;
   const dotSize = hovered ? 0.06 : 0.045;
 
   // Animate glow
@@ -52,12 +55,25 @@ export function CityMarker({ city, globeRadius }: CityMarkerProps) {
 
   const handleClick = (e: ThreeEvent<MouseEvent>) => {
     e.stopPropagation();
-    setSelectedCity(city);
+    // Don't open modal for origin markers
+    if (!isOrigin) {
+      setSelectedCity(city);
+    }
   };
 
-  // Colors - warm amber/coral for contrast against cyan globe
-  const markerColor = hovered ? '#ffd93d' : '#ff6b35';
-  const glowColor = '#ff6b35';
+  // Display name - use originName for origin markers
+  const displayName = isOrigin && originName ? originName : city.name;
+
+  // Colors - US cities are blue, international cities are orange/coral
+  const usColor = '#4a90d9';
+  const usHoverColor = '#6bb3ff';
+  const intlColor = '#ff6b35';
+  const intlHoverColor = '#ffd93d';
+
+  const markerColor = isUS
+    ? (hovered ? usHoverColor : usColor)
+    : (hovered ? intlHoverColor : intlColor);
+  const glowColor = isUS ? usColor : intlColor;
 
   return (
     <group ref={markerRef} position={position} rotation={rotation}>
@@ -133,8 +149,9 @@ export function CityMarker({ city, globeRadius }: CityMarkerProps) {
           }}
         >
           <div className="city-tooltip">
-            <span className="city-name">{city.name}</span>
-            <span className="city-country">{city.country}</span>
+            <span className="city-name">{displayName}</span>
+            {!isOrigin && <span className="city-country">{city.country}</span>}
+            {isOrigin && <span className="city-country origin-label">Origin</span>}
           </div>
         </Html>
       )}

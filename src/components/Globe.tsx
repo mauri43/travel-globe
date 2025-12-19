@@ -56,6 +56,60 @@ export function Globe() {
     );
   }, [cities, activeTagFilters]);
 
+  // Check if a city/location is in the US
+  const isUSLocation = (country: string | undefined, name?: string): boolean => {
+    if (country?.toLowerCase().includes('united states') || country?.toLowerCase() === 'usa' || country?.toLowerCase() === 'us') {
+      return true;
+    }
+    // Check for common US airport codes or city patterns in the name
+    const usAirportCodes = ['JFK', 'LAX', 'ORD', 'DFW', 'DEN', 'SFO', 'SEA', 'LAS', 'MCO', 'EWR', 'MIA', 'PHX', 'IAH', 'BOS', 'MSP', 'DTW', 'FLL', 'PHL', 'LGA', 'BWI', 'SLC', 'DCA', 'IAD', 'SAN', 'TPA', 'PDX', 'STL', 'HNL', 'BNA', 'AUS', 'OAK', 'SMF', 'SJC', 'RDU', 'CLE', 'MCI', 'SAT', 'IND', 'PIT', 'CMH', 'CVG', 'MKE', 'JAX', 'OMA', 'ABQ', 'ANC', 'BUF', 'OKC', 'RIC', 'TUL', 'SDF', 'GRR', 'BOI', 'BDL', 'ONT', 'PBI', 'RSW', 'ORF', 'BHM', 'TUS', 'ELP', 'ALB', 'ROC', 'SYR', 'PWM', 'DSM', 'LIT', 'GSO', 'RNO', 'CHS', 'MSY', 'ATL'];
+    if (name) {
+      const upperName = name.toUpperCase();
+      if (usAirportCodes.some(code => upperName.includes(code))) {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  // Get unique origin cities that aren't layovers (have unique coordinates)
+  const originMarkers = useMemo(() => {
+    const origins: Array<{
+      id: string;
+      name: string;
+      coordinates: { lat: number; lng: number };
+      isUS: boolean;
+    }> = [];
+    const seenCoords = new Set<string>();
+
+    // First, mark all destination coordinates as "seen" so we don't duplicate
+    filteredCities.forEach(city => {
+      const key = `${city.coordinates.lat.toFixed(2)},${city.coordinates.lng.toFixed(2)}`;
+      seenCoords.add(key);
+    });
+
+    // Now collect unique origins
+    filteredCities.forEach(city => {
+      if (city.flewFrom?.coordinates) {
+        const { lat, lng } = city.flewFrom.coordinates;
+        const key = `${lat.toFixed(2)},${lng.toFixed(2)}`;
+
+        // Skip if we already have a marker at this location (destination or another origin)
+        if (!seenCoords.has(key)) {
+          seenCoords.add(key);
+          origins.push({
+            id: `origin-${city.id}`,
+            name: city.flewFrom.name,
+            coordinates: { lat, lng },
+            isUS: isUSLocation(undefined, city.flewFrom.name),
+          });
+        }
+      }
+    });
+
+    return origins;
+  }, [filteredCities]);
+
   // Glow material for atmosphere - reduced intensity
   const glowMaterial = useMemo(() => {
     return new THREE.ShaderMaterial({
@@ -99,9 +153,36 @@ export function Globe() {
       {/* Flight paths with planes */}
       <FlightPaths globeRadius={2} />
 
-      {/* City markers */}
+      {/* Destination city markers */}
       {filteredCities.map((city) => (
-        <CityMarker key={city.id} city={city} globeRadius={2} />
+        <CityMarker
+          key={city.id}
+          city={city}
+          globeRadius={2}
+          isUS={isUSLocation(city.country, city.name)}
+        />
+      ))}
+
+      {/* Origin city markers */}
+      {originMarkers.map((origin) => (
+        <CityMarker
+          key={origin.id}
+          city={{
+            id: origin.id,
+            name: origin.name,
+            country: '',
+            coordinates: origin.coordinates,
+            dates: [],
+            photos: [],
+            videos: [],
+            memories: '',
+            tags: [],
+          }}
+          globeRadius={2}
+          isUS={origin.isUS}
+          isOrigin={true}
+          originName={origin.name}
+        />
       ))}
     </group>
   );

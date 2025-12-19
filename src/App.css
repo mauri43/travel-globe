@@ -402,6 +402,11 @@ body {
   letter-spacing: 0.1em;
 }
 
+.city-tooltip .origin-label {
+  color: #4a90d9;
+  font-weight: 500;
+}
+
 /* ================================================
    ADD BUTTON
    ================================================ */
