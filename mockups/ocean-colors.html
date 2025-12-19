@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ocean Color Options</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #0a0a12;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 10px;
+      font-size: 1.8rem;
+      background: linear-gradient(135deg, #00f5ff, #7b68ee);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #666;
+      margin-bottom: 40px;
+      font-size: 0.9rem;
+    }
+
+    .current {
+      text-align: center;
+      margin-bottom: 30px;
+      padding: 15px;
+      background: rgba(255,100,100,0.1);
+      border: 1px solid rgba(255,100,100,0.3);
+      border-radius: 10px;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .current h3 {
+      color: #ff6b6b;
+      margin-bottom: 5px;
+    }
+
+    .current p {
+      color: #888;
+      font-size: 0.85rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 30px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .option {
+      text-align: center;
+    }
+
+    .option h3 {
+      font-size: 0.9rem;
+      margin-bottom: 5px;
+      color: #fff;
+    }
+
+    .option .hex {
+      font-family: monospace;
+      font-size: 0.75rem;
+      color: #00f5ff;
+      margin-bottom: 10px;
+    }
+
+    .option p {
+      font-size: 0.7rem;
+      color: #666;
+      margin-top: 10px;
+      line-height: 1.4;
+    }
+
+    .globe-preview {
+      width: 200px;
+      height: 200px;
+      margin: 0 auto;
+      border-radius: 50%;
+      position: relative;
+      overflow: hidden;
+      box-shadow:
+        0 0 40px rgba(0, 245, 255, 0.1),
+        0 0 80px rgba(0, 245, 255, 0.05);
+    }
+
+    .globe-preview canvas {
+      border-radius: 50%;
+    }
+
+    @media (max-width: 1200px) {
+      .grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Ocean Color Options</h1>
+  <p class="subtitle">Choose a color that differentiates water from land while fitting the dark aesthetic</p>
+
+  <div class="current">
+    <h3>Current Color: #1666c9</h3>
+    <p>Too bright and saturated - doesn't blend with the dark theme</p>
+  </div>
+
+  <div class="grid">
+    <div class="option">
+      <h3>Option 1: Deep Space Navy</h3>
+      <div class="hex">#0a1628</div>
+      <div class="globe-preview">
+        <canvas id="globe1" width="200" height="200"></canvas>
+      </div>
+      <p>Very subtle, almost black with a hint of blue</p>
+    </div>
+
+    <div class="option">
+      <h3>Option 2: Midnight Abyss</h3>
+      <div class="hex">#0d1f3c</div>
+      <div class="globe-preview">
+        <canvas id="globe2" width="200" height="200"></canvas>
+      </div>
+      <p>Deeper blue, mysterious ocean depths</p>
+    </div>
+
+    <div class="option">
+      <h3>Option 3: Dark Teal</h3>
+      <div class="hex">#0a2a2a</div>
+      <div class="globe-preview">
+        <canvas id="globe3" width="200" height="200"></canvas>
+      </div>
+      <p>Teal undertone, matches the cyan accents</p>
+    </div>
+
+    <div class="option">
+      <h3>Option 4: Ocean Void</h3>
+      <div class="hex">#101830</div>
+      <div class="globe-preview">
+        <canvas id="globe4" width="200" height="200"></canvas>
+      </div>
+      <p>Rich navy with purple undertones</p>
+    </div>
+
+    <div class="option">
+      <h3>Option 5: Cyber Sea</h3>
+      <div class="hex">#0a2535</div>
+      <div class="globe-preview">
+        <canvas id="globe5" width="200" height="200"></canvas>
+      </div>
+      <p>Cyan-leaning dark blue, tech aesthetic</p>
+    </div>
+
+    <div class="option">
+      <h3>Option 6: Stealth Blue</h3>
+      <div class="hex">#141e30</div>
+      <div class="globe-preview">
+        <canvas id="globe6" width="200" height="200"></canvas>
+      </div>
+      <p>Muted steel blue, professional look</p>
+    </div>
+
+    <div class="option">
+      <h3>Option 7: Bioluminescent</h3>
+      <div class="hex">#082838</div>
+      <div class="globe-preview">
+        <canvas id="globe7" width="200" height="200"></canvas>
+      </div>
+      <p>Deep sea glow, slightly brighter teal</p>
+    </div>
+
+    <div class="option">
+      <h3>Option 8: Obsidian Sea</h3>
+      <div class="hex">#12182a</div>
+      <div class="globe-preview">
+        <canvas id="globe8" width="200" height="200"></canvas>
+      </div>
+      <p>Almost black with subtle blue shimmer</p>
+    </div>
+
+    <div class="option">
+      <h3>Option 9: Arctic Dark</h3>
+      <div class="hex">#0f2027</div>
+      <div class="globe-preview">
+        <canvas id="globe9" width="200" height="200"></canvas>
+      </div>
+      <p>Cool, icy undertone, moody feel</p>
+    </div>
+
+    <div class="option">
+      <h3>Option 10: Nebula Blue</h3>
+      <div class="hex">#0c1e3d</div>
+      <div class="globe-preview">
+        <canvas id="globe10" width="200" height="200"></canvas>
+      </div>
+      <p>Richer blue, cosmic feel</p>
+    </div>
+  </div>
+
+  <script>
+    const oceanColors = [
+      '#0a1628', // 1: Deep Space Navy
+      '#0d1f3c', // 2: Midnight Abyss
+      '#0a2a2a', // 3: Dark Teal
+      '#101830', // 4: Ocean Void
+      '#0a2535', // 5: Cyber Sea
+      '#141e30', // 6: Stealth Blue
+      '#082838', // 7: Bioluminescent
+      '#12182a', // 8: Obsidian Sea
+      '#0f2027', // 9: Arctic Dark
+      '#0c1e3d', // 10: Nebula Blue
+    ];
+
+    const landColor = '#050508';
+    const borderColor = 'rgba(0, 245, 255, 0.5)';
+
+    // Simplified continent outlines (normalized 0-1 coordinates)
+    const continents = [
+      // North America
+      [[0.12, 0.20], [0.18, 0.15], [0.28, 0.18], [0.35, 0.25], [0.32, 0.35], [0.28, 0.40], [0.22, 0.42], [0.18, 0.38], [0.12, 0.30]],
+      // South America
+      [[0.24, 0.52], [0.30, 0.55], [0.32, 0.65], [0.30, 0.78], [0.25, 0.75], [0.22, 0.62]],
+      // Europe
+      [[0.46, 0.22], [0.52, 0.20], [0.56, 0.24], [0.54, 0.32], [0.48, 0.34], [0.45, 0.28]],
+      // Africa
+      [[0.46, 0.38], [0.54, 0.36], [0.58, 0.45], [0.55, 0.60], [0.48, 0.62], [0.44, 0.50]],
+      // Asia
+      [[0.56, 0.18], [0.72, 0.15], [0.85, 0.22], [0.88, 0.35], [0.78, 0.42], [0.65, 0.40], [0.58, 0.35]],
+      // Australia
+      [[0.78, 0.58], [0.88, 0.56], [0.90, 0.65], [0.85, 0.72], [0.78, 0.68]],
+      // Greenland
+      [[0.35, 0.12], [0.42, 0.10], [0.44, 0.18], [0.38, 0.20]],
+    ];
+
+    function drawGlobe(canvasId, oceanColor) {
+      const canvas = document.getElementById(canvasId);
+      const ctx = canvas.getContext('2d');
+      const size = 200;
+      const centerX = size / 2;
+      const centerY = size / 2;
+      const radius = size / 2 - 5;
+
+      // Clear
+      ctx.clearRect(0, 0, size, size);
+
+      // Ocean background with gradient
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+
+      const gradient = ctx.createRadialGradient(
+        centerX - radius * 0.3, centerY - radius * 0.3, 0,
+        centerX, centerY, radius
+      );
+      gradient.addColorStop(0, lightenColor(oceanColor, 15));
+      gradient.addColorStop(0.7, oceanColor);
+      gradient.addColorStop(1, darkenColor(oceanColor, 10));
+      ctx.fillStyle = gradient;
+      ctx.fill();
+
+      // Clip to globe
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, radius - 1, 0, Math.PI * 2);
+      ctx.clip();
+
+      // Draw continents
+      continents.forEach(points => {
+        ctx.beginPath();
+        ctx.moveTo(points[0][0] * size, points[0][1] * size);
+        for (let i = 1; i < points.length; i++) {
+          ctx.lineTo(points[i][0] * size, points[i][1] * size);
+        }
+        ctx.closePath();
+        ctx.fillStyle = landColor;
+        ctx.fill();
+        ctx.strokeStyle = borderColor;
+        ctx.lineWidth = 0.8;
+        ctx.stroke();
+      });
+
+      ctx.restore();
+
+      // Atmosphere glow
+      const glowGradient = ctx.createRadialGradient(
+        centerX, centerY, radius - 15,
+        centerX, centerY, radius + 10
+      );
+      glowGradient.addColorStop(0, 'rgba(0, 245, 255, 0)');
+      glowGradient.addColorStop(0.5, 'rgba(0, 245, 255, 0.08)');
+      glowGradient.addColorStop(1, 'rgba(0, 245, 255, 0)');
+
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, radius + 10, 0, Math.PI * 2);
+      ctx.fillStyle = glowGradient;
+      ctx.fill();
+
+      // Sample markers
+      const markers = [
+        { x: 0.25, y: 0.32 }, // US
+        { x: 0.50, y: 0.28 }, // Europe
+        { x: 0.28, y: 0.60 }, // S. America
+      ];
+
+      markers.forEach(m => {
+        const mx = m.x * size;
+        const my = m.y * size;
+
+        // Pin line
+        ctx.beginPath();
+        ctx.moveTo(mx, my);
+        ctx.lineTo(mx, my - 20);
+        ctx.strokeStyle = '#ff6b35';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Pin head glow
+        ctx.beginPath();
+        ctx.arc(mx, my - 20, 8, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 107, 53, 0.3)';
+        ctx.fill();
+
+        // Pin head
+        ctx.beginPath();
+        ctx.arc(mx, my - 20, 5, 0, Math.PI * 2);
+        ctx.fillStyle = '#ff6b35';
+        ctx.fill();
+      });
+
+      // Flight path
+      ctx.beginPath();
+      ctx.moveTo(0.25 * size, 0.32 * size - 20);
+      ctx.quadraticCurveTo(0.38 * size, 0.15 * size, 0.50 * size, 0.28 * size - 20);
+      ctx.strokeStyle = 'rgba(255, 107, 53, 0.4)';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([4, 4]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    function lightenColor(hex, percent) {
+      const num = parseInt(hex.replace('#', ''), 16);
+      const amt = Math.round(2.55 * percent);
+      const R = Math.min(255, (num >> 16) + amt);
+      const G = Math.min(255, ((num >> 8) & 0x00FF) + amt);
+      const B = Math.min(255, (num & 0x0000FF) + amt);
+      return `rgb(${R}, ${G}, ${B})`;
+    }
+
+    function darkenColor(hex, percent) {
+      const num = parseInt(hex.replace('#', ''), 16);
+      const amt = Math.round(2.55 * percent);
+      const R = Math.max(0, (num >> 16) - amt);
+      const G = Math.max(0, ((num >> 8) & 0x00FF) - amt);
+      const B = Math.max(0, (num & 0x0000FF) - amt);
+      return `rgb(${R}, ${G}, ${B})`;
+    }
+
+    // Draw all globes
+    oceanColors.forEach((color, index) => {
+      drawGlobe(`globe${index + 1}`, color);
+    });
+  </script>
+</body>
+</html>
