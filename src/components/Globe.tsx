@@ -1,4 +1,4 @@
-import { useRef, useMemo } from 'react';
+import { useRef, useMemo, useState, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { CityMarker } from './CityMarker';
@@ -110,12 +110,61 @@ export function Globe() {
     return origins;
   }, [filteredCities]);
 
-  // Ocean material - visible navy blue
-  const oceanMaterial = useMemo(() => {
-    return new THREE.MeshBasicMaterial({
-      color: new THREE.Color(0x1a3a5c), // More visible navy blue
-    });
+  // Load land mask texture
+  const [landTexture, setLandTexture] = useState<THREE.Texture | null>(null);
+
+  useEffect(() => {
+    const loader = new THREE.TextureLoader();
+    loader.load(
+      '/textures/earth-land.jpg',
+      (texture) => {
+        setLandTexture(texture);
+      },
+      undefined,
+      (error) => {
+        console.error('Failed to load land texture:', error);
+      }
+    );
   }, []);
+
+  // Ocean/land material with texture-based masking
+  const oceanMaterial = useMemo(() => {
+    if (!landTexture) {
+      // Fallback while loading
+      return new THREE.MeshBasicMaterial({
+        color: new THREE.Color(0x0a0a12),
+      });
+    }
+
+    return new THREE.ShaderMaterial({
+      uniforms: {
+        landMask: { value: landTexture },
+        oceanColor: { value: new THREE.Color(0x12283d) }, // Deep navy blue ocean
+        landColor: { value: new THREE.Color(0x0a0a0f) },  // Very dark land
+      },
+      vertexShader: `
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform sampler2D landMask;
+        uniform vec3 oceanColor;
+        uniform vec3 landColor;
+        varying vec2 vUv;
+
+        void main() {
+          float mask = texture2D(landMask, vUv).r;
+          // Specular map: bright = land, dark = water
+          // So we mix: low mask = ocean, high mask = land
+          vec3 color = mix(oceanColor, landColor, mask);
+          gl_FragColor = vec4(color, 1.0);
+        }
+      `,
+    });
+  }, [landTexture]);
 
   // Glow material for atmosphere - reduced intensity
   const glowMaterial = useMemo(() => {
