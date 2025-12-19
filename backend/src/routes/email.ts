@@ -209,4 +209,28 @@ router.post('/test', upload.any(), (req: Request, res: Response) => {
   });
 });
 
+// Debug endpoint to check recent email-sourced cities
+router.get('/debug/recent', async (req: Request, res: Response) => {
+  try {
+    const citiesSnapshot = await db()
+      .collection('cities')
+      .where('source', '==', 'email')
+      .orderBy('createdAt', 'desc')
+      .limit(10)
+      .get();
+
+    const cities = citiesSnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    res.json({
+      count: cities.length,
+      cities,
+    });
+  } catch (error) {
+    res.json({ error: String(error) });
+  }
+});
+
 export default router;
