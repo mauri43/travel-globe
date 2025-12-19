@@ -1,6 +1,5 @@
 import { useMemo, useEffect, useState } from 'react';
-import { Line, useTexture } from '@react-three/drei';
-import * as THREE from 'three';
+import { Line } from '@react-three/drei';
 
 // Convert lat/lng to 3D position on sphere
 function latLngToVector3(lat: number, lng: number, radius: number): [number, number, number] {
