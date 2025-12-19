@@ -94,6 +94,8 @@ export function OnboardingTour() {
     if (isLastStep) {
       handleFinish();
     } else {
+      // Reset targetRect so tooltip centers while finding new element
+      setTargetRect(null);
       setCurrentStep(prev => prev + 1);
     }
   };
