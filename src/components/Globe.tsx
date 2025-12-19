@@ -110,10 +110,10 @@ export function Globe() {
     return origins;
   }, [filteredCities]);
 
-  // Ocean material for deep blue water effect - using MeshBasicMaterial for reliability
+  // Ocean material - TEST GREEN
   const oceanMaterial = useMemo(() => {
     return new THREE.MeshBasicMaterial({
-      color: new THREE.Color(0x0a1628), // Deep navy blue
+      color: new THREE.Color(0x00ff00), // Bright green for testing
     });
   }, []);
 
