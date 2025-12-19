@@ -135,7 +135,7 @@ export function Globe() {
     return new THREE.ShaderMaterial({
       uniforms: {
         landMask: { value: landTexture },
-        oceanColor: { value: new THREE.Color(0x0a2a2a) }, // Dark teal ocean
+        oceanColor: { value: new THREE.Color(0x095880) }, // Deep blue ocean
         landColor: { value: new THREE.Color(0x050508) },  // Black land
       },
       vertexShader: `
