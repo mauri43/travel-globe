@@ -149,7 +149,7 @@ router.post('/inbound', upload.any(), async (req: Request, res: Response) => {
 
     // Create the city entry
     const now = new Date().toISOString();
-    const cityData = {
+    const cityData: Record<string, any> = {
       userId,
       name: destinationData?.name || flight.destination || 'Unknown',
       country: destinationData?.country || '',
@@ -166,13 +166,17 @@ router.post('/inbound', upload.any(), async (req: Request, res: Response) => {
       memories: '',
       tags: [],
       status,
-      missingFields: missingFields.length > 0 ? missingFields : undefined,
       source: 'email',
       airline: flight.airline,
       parserUsed: parseResult.parserUsed,
       createdAt: now,
       updatedAt: now,
     };
+
+    // Only add missingFields if there are any (Firestore doesn't allow undefined)
+    if (missingFields.length > 0) {
+      cityData.missingFields = missingFields;
+    }
 
     const docRef = await db().collection('cities').add(cityData);
     console.log(`Created city entry: ${docRef.id} with status: ${status}`);
