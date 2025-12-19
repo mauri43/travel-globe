@@ -130,16 +130,18 @@ export function Globe() {
   // Ocean/land material with texture-based masking
   const oceanMaterial = useMemo(() => {
     if (!landTexture) {
-      // Fallback while loading
+      // Fallback while loading - bright red so we know texture didn't load
+      console.log('Land texture not loaded yet');
       return new THREE.MeshBasicMaterial({
-        color: new THREE.Color(0x0a0a12),
+        color: new THREE.Color(0xff0000),
       });
     }
 
+    console.log('Land texture loaded, creating shader material');
     return new THREE.ShaderMaterial({
       uniforms: {
         landMask: { value: landTexture },
-        oceanColor: { value: new THREE.Color(0x0a2a1a) }, // Deep green ocean
+        oceanColor: { value: new THREE.Color(0x00ff00) }, // BRIGHT GREEN ocean
         landColor: { value: new THREE.Color(0x0a0a0f) },  // Very dark land
       },
       vertexShader: `
