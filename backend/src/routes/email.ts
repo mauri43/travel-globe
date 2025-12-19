@@ -167,7 +167,7 @@ router.post('/inbound', upload.any(), async (req: Request, res: Response) => {
       tags: [],
       status,
       source: 'email',
-      airline: flight.airline,
+      airline: flight.airline || 'Unknown Airline',
       parserUsed: parseResult.parserUsed,
       createdAt: now,
       updatedAt: now,
