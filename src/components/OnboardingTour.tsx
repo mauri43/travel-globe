@@ -204,15 +204,6 @@ export function OnboardingTour() {
   const stepDescription = currentStepData?.description || 'Let us show you around!';
   const showCyanBorder = !currentStepData?.hideSpotlightBorder;
 
-  // Get spotlight position - use current rect or last known rect during transition
-  const spotlightRect = targetRect || (lastRectRef.current ? {
-    top: lastRectRef.current.top + 8,
-    left: lastRectRef.current.left + 8,
-    width: lastRectRef.current.width - 16,
-    height: lastRectRef.current.height - 16,
-    bottom: 0, right: 0, x: 0, y: 0, toJSON: () => {}
-  } as DOMRect : null);
-
   return (
     <div className="tour-overlay" role="dialog" aria-modal="true">
       {/* Spotlight - always render if we have a position, animate between positions */}
