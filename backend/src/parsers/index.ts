@@ -13,6 +13,17 @@ import { parseWithClaude } from './claude-fallback';
 function detectAirline(from: string, subject: string, body: string): string | null {
   const content = `${from} ${subject} ${body}`.toLowerCase();
 
+  // Check for booking sites FIRST - they mention airline names but should use their own parsers
+  if (content.includes('chase travel') || content.includes('chasetravel.com') || content.includes('chase.com/travel') || content.includes('trip id') || content.includes('travel reservation center')) {
+    return 'chase';
+  }
+  if (content.includes('expedia.com')) return 'expedia';
+  if (content.includes('kayak.com')) return 'kayak';
+  if (content.includes('google.com/travel') || content.includes('google flights')) return 'google';
+  if (content.includes('booking.com')) return 'booking';
+  if (content.includes('priceline.com')) return 'priceline';
+
+  // Then check for direct airline emails
   if (content.includes('united.com') || content.includes('united airlines')) {
     return 'united';
   }
@@ -37,14 +48,6 @@ function detectAirline(from: string, subject: string, body: string): string | nu
   if (content.includes('jetblue.com') || content.includes('jetblue')) {
     return 'jetblue';
   }
-
-  // Check for booking sites
-  if (content.includes('chase travel') || content.includes('chase.com/travel') || content.includes('trip id') || content.includes('travel reservation center')) return 'chase';
-  if (content.includes('expedia.com')) return 'expedia';
-  if (content.includes('kayak.com')) return 'kayak';
-  if (content.includes('google.com/travel') || content.includes('google flights')) return 'google';
-  if (content.includes('booking.com')) return 'booking';
-  if (content.includes('priceline.com')) return 'priceline';
 
   return null;
 }
