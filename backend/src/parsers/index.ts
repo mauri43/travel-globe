@@ -6,6 +6,7 @@ import { parseSpirit } from './spirit';
 import { parseFrontier } from './frontier';
 import { parseDelta } from './delta';
 import { parseChase } from './chase';
+import { parseRyanair } from './ryanair';
 import { parseGeneric } from './generic';
 import { parseWithClaude } from './claude-fallback';
 
@@ -24,6 +25,9 @@ function detectAirline(from: string, subject: string, body: string): string | nu
   if (content.includes('priceline.com')) return 'priceline';
 
   // Then check for direct airline emails
+  if (content.includes('ryanair.com') || content.includes('ryanair')) {
+    return 'ryanair';
+  }
   if (content.includes('avianca.com') || content.includes('avianca')) {
     return 'avianca';
   }
@@ -65,6 +69,7 @@ function getParser(airline: string): ((subject: string, body: string) => ParserR
     'frontier': parseFrontier,
     'delta': parseDelta,
     'chase': parseChase,
+    'ryanair': parseRyanair,
   };
 
   return parsers[airline] || null;
