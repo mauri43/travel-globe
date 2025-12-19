@@ -45,10 +45,12 @@ router.put('/trusted-emails', requireAuth, async (req: AuthRequest, res: Respons
       validEmails.unshift(req.user!.email);
     }
 
-    await db().collection('users').doc(req.user!.uid).update({
+    // Use set with merge to create document if it doesn't exist
+    await db().collection('users').doc(req.user!.uid).set({
+      email: req.user!.email,
       trustedEmails: validEmails,
       updatedAt: new Date().toISOString(),
-    });
+    }, { merge: true });
 
     res.json({ trustedEmails: validEmails });
   } catch (error) {
