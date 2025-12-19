@@ -202,7 +202,11 @@ export function OnboardingTour() {
       {/* Tooltip */}
       <div
         className="tour-tooltip"
-        style={getTooltipStyle()}
+        style={{
+          ...getTooltipStyle(),
+          background: '#1a1a2e',
+          border: '2px solid #00f5ff',
+        }}
       >
         {/* Arrow pointing to target */}
         {targetRect && currentStepData && <div className={`tour-arrow ${getArrowClass()}`} />}
