@@ -2090,7 +2090,7 @@ body {
 .refresh-btn {
   position: fixed;
   bottom: var(--space-xl);
-  left: calc(var(--space-xl) + 60px);
+  left: calc(var(--space-xl) + 112px);
   z-index: 100;
   width: 48px;
   height: 48px;
