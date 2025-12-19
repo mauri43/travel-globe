@@ -110,11 +110,10 @@ export function Globe() {
     return origins;
   }, [filteredCities]);
 
-  // Simple ocean material - deep navy blue for water
-  // Land will be distinguished by the cyan country borders
+  // Ocean material - visible navy blue
   const oceanMaterial = useMemo(() => {
     return new THREE.MeshBasicMaterial({
-      color: new THREE.Color(0x0a1525), // Deep navy blue
+      color: new THREE.Color(0x1a3a5c), // More visible navy blue
     });
   }, []);
 
