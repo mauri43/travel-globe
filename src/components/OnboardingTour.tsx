@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useStore } from '../store';
 import { updateTourCompleted } from '../services/api';
 
@@ -174,73 +174,60 @@ export function OnboardingTour() {
   if (!isTourActive) return null;
 
   return (
-    <AnimatePresence>
-      <div className="tour-overlay" role="dialog" aria-modal="true">
-        {/* Dark backdrop */}
+    <div className="tour-overlay" role="dialog" aria-modal="true">
+      {/* Dark backdrop */}
+      <div className="tour-backdrop" />
+
+      {/* Spotlight highlight around target element */}
+      {targetRect && (
         <motion.div
-          className="tour-backdrop"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
+          className="tour-spotlight"
+          animate={{
+            top: targetRect.top - 8,
+            left: targetRect.left - 8,
+            width: targetRect.width + 16,
+            height: targetRect.height + 16,
+          }}
+          transition={{ duration: 0.3 }}
+          style={{ position: 'fixed' }}
         />
+      )}
 
-        {/* Spotlight highlight around target element */}
-        {targetRect && (
-          <motion.div
-            className="tour-spotlight"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
-            style={{
-              position: 'fixed',
-              top: targetRect.top - 8,
-              left: targetRect.left - 8,
-              width: targetRect.width + 16,
-              height: targetRect.height + 16,
-            }}
-          />
-        )}
+      {/* Tooltip */}
+      <motion.div
+        className="tour-tooltip"
+        animate={getTooltipStyle()}
+        transition={{ duration: 0.3 }}
+      >
+        {/* Arrow pointing to target */}
+        {targetRect && <div className={`tour-arrow ${getArrowClass()}`} />}
 
-        {/* Tooltip */}
-        <motion.div
-          className="tour-tooltip"
-          style={getTooltipStyle()}
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.9 }}
-          transition={{ duration: 0.3, delay: 0.1 }}
-          key={currentStep}
-        >
-          {/* Arrow pointing to target */}
-          {targetRect && <div className={`tour-arrow ${getArrowClass()}`} />}
+        {/* Content */}
+        <div className="tour-content">
+          <h3 className="tour-title">{currentStepData.title}</h3>
+          <p className="tour-description">{currentStepData.description}</p>
 
-          {/* Content */}
-          <div className="tour-content">
-            <h3 className="tour-title">{currentStepData.title}</h3>
-            <p className="tour-description">{currentStepData.description}</p>
-
-            {/* Progress dots */}
-            <div className="tour-progress">
-              {TOUR_STEPS.map((_, index) => (
-                <div
-                  key={index}
-                  className={`tour-progress-dot ${index === currentStep ? 'active' : ''} ${index < currentStep ? 'completed' : ''}`}
-                />
-              ))}
-            </div>
-
-            {/* Navigation */}
-            <div className="tour-actions">
-              <div className="tour-step-count">
-                Step {currentStep + 1} of {TOUR_STEPS.length}
-              </div>
-              <button className="tour-button" onClick={handleNext}>
-                {isLastStep ? 'Finish' : 'Next'}
-              </button>
-            </div>
+          {/* Progress dots */}
+          <div className="tour-progress">
+            {TOUR_STEPS.map((_, index) => (
+              <div
+                key={index}
+                className={`tour-progress-dot ${index === currentStep ? 'active' : ''} ${index < currentStep ? 'completed' : ''}`}
+              />
+            ))}
           </div>
-        </motion.div>
-      </div>
-    </AnimatePresence>
+
+          {/* Navigation */}
+          <div className="tour-actions">
+            <div className="tour-step-count">
+              Step {currentStep + 1} of {TOUR_STEPS.length}
+            </div>
+            <button className="tour-button" onClick={handleNext}>
+              {isLastStep ? 'Finish' : 'Next'}
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    </div>
   );
 }
