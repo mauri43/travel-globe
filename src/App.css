@@ -3309,6 +3309,7 @@ body {
 }
 
 .tour-tooltip {
+  position: fixed;
   background: var(--void-surface);
   border: 1px solid var(--cyan-dim);
   border-radius: 16px;
