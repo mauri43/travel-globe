@@ -283,6 +283,67 @@ body {
   letter-spacing: 0.1em;
 }
 
+/* Auth Section */
+.auth-section {
+  display: flex;
+  align-items: center;
+  margin-left: var(--space-xl);
+}
+
+.auth-loading {
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+}
+
+.user-menu {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.user-email {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.auth-btn {
+  padding: var(--space-sm) var(--space-md);
+  border-radius: 8px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.login-btn {
+  background: var(--cyan-ghost);
+  border: 1px solid var(--cyan-dim);
+  color: var(--cyan-glow);
+}
+
+.login-btn:hover {
+  background: var(--cyan-dim);
+  border-color: var(--cyan-glow);
+  box-shadow: var(--glow-cyan);
+}
+
+.logout-btn {
+  background: var(--void-elevated);
+  border: 1px solid var(--void-border);
+  color: var(--text-secondary);
+}
+
+.logout-btn:hover {
+  background: var(--void-border);
+  color: var(--text-primary);
+}
+
 /* ================================================
    CANVAS / 3D SCENE
    ================================================ */

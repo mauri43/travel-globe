@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { AppState, City } from './types';
+import * as api from './services/api';
 
 const sampleCities: City[] = [
   {
@@ -155,27 +156,89 @@ const sampleCities: City[] = [
   },
 ];
 
-export const useStore = create<AppState>()(
+interface ExtendedAppState extends AppState {
+  isLoggedIn: boolean;
+  isLoading: boolean;
+  setLoggedIn: (loggedIn: boolean) => void;
+  setLoading: (loading: boolean) => void;
+  setCities: (cities: City[]) => void;
+  loadCitiesFromApi: () => Promise<void>;
+  addCityWithApi: (city: Omit<City, 'id'>) => Promise<City>;
+  updateCityWithApi: (id: string, updates: Partial<City>) => Promise<void>;
+  deleteCityWithApi: (id: string) => Promise<void>;
+}
+
+export const useStore = create<ExtendedAppState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       cities: sampleCities,
       selectedCity: null,
       isAdminOpen: false,
       isPlacesListOpen: false,
       editingCity: null,
       activeTagFilters: [],
+      isLoggedIn: false,
+      isLoading: false,
+
+      setLoggedIn: (loggedIn) => set({ isLoggedIn: loggedIn }),
+      setLoading: (loading) => set({ isLoading: loading }),
+      setCities: (cities) => set({ cities }),
+
+      loadCitiesFromApi: async () => {
+        set({ isLoading: true });
+        try {
+          const cities = await api.getCities();
+          set({ cities, isLoading: false });
+        } catch (error) {
+          console.error('Failed to load cities:', error);
+          set({ isLoading: false });
+        }
+      },
+
       addCity: (city) =>
         set((state) => ({ cities: [...state.cities, city] })),
+
+      addCityWithApi: async (cityData) => {
+        const { isLoggedIn } = get();
+        if (isLoggedIn) {
+          const newCity = await api.createCity(cityData);
+          set((state) => ({ cities: [...state.cities, newCity] }));
+          return newCity;
+        } else {
+          const newCity = { ...cityData, id: crypto.randomUUID() };
+          set((state) => ({ cities: [...state.cities, newCity] }));
+          return newCity;
+        }
+      },
+
       updateCity: (id, updatedCity) =>
         set((state) => ({
           cities: state.cities.map((city) =>
             city.id === id ? { ...city, ...updatedCity } : city
           ),
         })),
+
+      updateCityWithApi: async (id, updates) => {
+        const { isLoggedIn, updateCity } = get();
+        if (isLoggedIn) {
+          await api.updateCity(id, updates);
+        }
+        updateCity(id, updates);
+      },
+
       deleteCity: (id) =>
         set((state) => ({
           cities: state.cities.filter((city) => city.id !== id),
         })),
+
+      deleteCityWithApi: async (id) => {
+        const { isLoggedIn, deleteCity } = get();
+        if (isLoggedIn) {
+          await api.deleteCity(id);
+        }
+        deleteCity(id);
+      },
+
       setSelectedCity: (city) => set({ selectedCity: city }),
       setAdminOpen: (open) => set({ isAdminOpen: open }),
       setPlacesListOpen: (open) => set({ isPlacesListOpen: open }),
@@ -190,6 +253,11 @@ export const useStore = create<AppState>()(
     }),
     {
       name: 'travel-globe-storage',
+      partialize: (state) => ({
+        // Only persist these fields for guest users
+        cities: state.isLoggedIn ? [] : state.cities,
+        activeTagFilters: state.activeTagFilters,
+      }),
     }
   )
 );

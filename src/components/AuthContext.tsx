@@ -1,5 +1,6 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User, onAuthChange, login, signup, logout } from '../services/firebase';
+import { createContext, useContext, useState, useEffect, useRef, type ReactNode } from 'react';
+import { onAuthChange, login, signup, logout, type User } from '../services/firebase';
+import { useStore } from '../store';
 
 interface AuthContextType {
   user: User | null;
@@ -11,18 +12,59 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
+const sampleCities = [
+  {
+    id: '1',
+    name: 'Tokyo',
+    country: 'Japan',
+    coordinates: { lat: 35.6762, lng: 139.6503 },
+    dates: ['2023-04-15', '2023-04-22'],
+    photos: ['https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=800'],
+    videos: [],
+    memories: 'Cherry blossoms in full bloom, incredible street food in Shibuya.',
+    tags: ['cherry blossoms', 'food', 'temples', 'culture'],
+  },
+  {
+    id: '2',
+    name: 'Paris',
+    country: 'France',
+    coordinates: { lat: 48.8566, lng: 2.3522 },
+    dates: ['2022-09-10', '2022-09-17'],
+    photos: ['https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=800'],
+    videos: [],
+    memories: 'Morning croissants by the Seine, watching the Eiffel Tower sparkle.',
+    tags: ['romance', 'art', 'architecture', 'food'],
+  },
+];
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const { setLoggedIn, setCities, loadCitiesFromApi } = useStore();
+  const previousUser = useRef<User | null>(null);
 
   useEffect(() => {
-    const unsubscribe = onAuthChange((user) => {
-      setUser(user);
+    const unsubscribe = onAuthChange(async (newUser) => {
+      const wasLoggedIn = !!previousUser.current;
+      const isNowLoggedIn = !!newUser;
+
+      setUser(newUser);
+      setLoggedIn(isNowLoggedIn);
+
+      if (isNowLoggedIn && !wasLoggedIn) {
+        // User just logged in - load cities from API
+        await loadCitiesFromApi();
+      } else if (!isNowLoggedIn && wasLoggedIn) {
+        // User just logged out - reset to sample cities
+        setCities(sampleCities);
+      }
+
+      previousUser.current = newUser;
       setLoading(false);
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [setLoggedIn, setCities, loadCitiesFromApi]);
 
   const handleLogin = async (email: string, password: string) => {
     await login(email, password);

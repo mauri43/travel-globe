@@ -1,9 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { v4 as uuidv4 } from 'uuid';
 import { useStore } from '../store';
 import { DatePicker } from './DatePicker';
-import type { City } from '../types';
 
 // Google Places API key
 const GOOGLE_PLACES_API_KEY = 'AIzaSyB9TQe9WP_CBsVtJ6Z7WxjaygP8B1yxwTY';
@@ -88,7 +86,7 @@ const DEFAULT_ORIGIN = {
 };
 
 export function AdminPanel() {
-  const { cities, isAdminOpen, setAdminOpen, addCity, updateCity, deleteCity, editingCity, setEditingCity } = useStore();
+  const { cities, isAdminOpen, setAdminOpen, addCityWithApi, updateCityWithApi, deleteCityWithApi, editingCity, setEditingCity } = useStore();
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [tagInput, setTagInput] = useState('');
   const [dragActive, setDragActive] = useState(false);
@@ -470,7 +468,9 @@ export function AdminPanel() {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!formData.name || !formData.lat || !formData.lng) {
@@ -478,48 +478,64 @@ export function AdminPanel() {
       return;
     }
 
-    // Determine flew from: use entered value or default to Washington, DC
-    const flewFrom = formData.flewFromName && formData.flewFromLat && formData.flewFromLng
-      ? {
-          name: formData.flewFromName,
-          coordinates: {
-            lat: parseFloat(formData.flewFromLat),
-            lng: parseFloat(formData.flewFromLng),
-          },
-        }
-      : DEFAULT_ORIGIN;
+    setIsSaving(true);
 
-    const cityData: City = {
-      id: editingCity?.id || uuidv4(),
-      name: formData.name,
-      country: formData.country,
-      coordinates: {
-        lat: parseFloat(formData.lat),
-        lng: parseFloat(formData.lng),
-      },
-      flewFrom,
-      isOneWay: formData.isOneWay,
-      tripName: formData.tripName || undefined,
-      dates: formData.dates.filter((d) => d !== ''),
-      photos: formData.photos,
-      videos: formData.videos,
-      memories: formData.memories,
-      tags: formData.tags,
-    };
+    try {
+      // Determine flew from: use entered value or default to Washington, DC
+      const flewFrom = formData.flewFromName && formData.flewFromLat && formData.flewFromLng
+        ? {
+            name: formData.flewFromName,
+            coordinates: {
+              lat: parseFloat(formData.flewFromLat),
+              lng: parseFloat(formData.flewFromLng),
+            },
+          }
+        : DEFAULT_ORIGIN;
 
-    if (editingCity) {
-      updateCity(editingCity.id, cityData);
-    } else {
-      addCity(cityData);
+      const cityData = {
+        name: formData.name,
+        country: formData.country,
+        coordinates: {
+          lat: parseFloat(formData.lat),
+          lng: parseFloat(formData.lng),
+        },
+        flewFrom,
+        isOneWay: formData.isOneWay,
+        tripName: formData.tripName || undefined,
+        dates: formData.dates.filter((d) => d !== ''),
+        photos: formData.photos,
+        videos: formData.videos,
+        memories: formData.memories,
+        tags: formData.tags,
+      };
+
+      if (editingCity) {
+        await updateCityWithApi(editingCity.id, cityData);
+      } else {
+        await addCityWithApi(cityData);
+      }
+
+      handleClose();
+    } catch (error) {
+      console.error('Failed to save city:', error);
+      alert('Failed to save. Please try again.');
+    } finally {
+      setIsSaving(false);
     }
-
-    handleClose();
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (editingCity && confirm('Are you sure you want to delete this city?')) {
-      deleteCity(editingCity.id);
-      handleClose();
+      setIsSaving(true);
+      try {
+        await deleteCityWithApi(editingCity.id);
+        handleClose();
+      } catch (error) {
+        console.error('Failed to delete city:', error);
+        alert('Failed to delete. Please try again.');
+      } finally {
+        setIsSaving(false);
+      }
     }
   };
 
@@ -876,15 +892,15 @@ export function AdminPanel() {
             {/* Actions */}
             <div className="form-actions">
               {editingCity && (
-                <button type="button" className="delete-btn" onClick={handleDelete}>
-                  Delete
+                <button type="button" className="delete-btn" onClick={handleDelete} disabled={isSaving}>
+                  {isSaving ? 'Deleting...' : 'Delete'}
                 </button>
               )}
-              <button type="button" className="cancel-btn" onClick={handleClose}>
+              <button type="button" className="cancel-btn" onClick={handleClose} disabled={isSaving}>
                 Cancel
               </button>
-              <button type="submit" className="submit-btn">
-                {editingCity ? 'Save Changes' : 'Add Memory'}
+              <button type="submit" className="submit-btn" disabled={isSaving}>
+                {isSaving ? 'Saving...' : editingCity ? 'Save Changes' : 'Add Memory'}
               </button>
             </div>
           </form>

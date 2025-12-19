@@ -5,7 +5,7 @@ import {
   createUserWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
-  User,
+  type User,
 } from 'firebase/auth';
 
 const firebaseConfig = {
@@ -44,4 +44,4 @@ export async function getIdToken(): Promise<string | null> {
   return user.getIdToken();
 }
 
-export { User };
+export type { User };

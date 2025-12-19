@@ -1,10 +1,15 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useStore } from '../store';
 import { calculateTotalMiles } from '../utils/distance';
+import { useAuth } from './AuthContext';
+import { AuthModal } from './AuthModal';
 
 export function Header() {
   const cities = useStore((state) => state.cities);
   const setPlacesListOpen = useStore((state) => state.setPlacesListOpen);
+  const { user, logout, loading } = useAuth();
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   const totalMiles = calculateTotalMiles(cities);
 
@@ -102,7 +107,24 @@ export function Header() {
             </div>
           </div>
         </div>
+        <div className="auth-section">
+          {loading ? (
+            <span className="auth-loading">...</span>
+          ) : user ? (
+            <div className="user-menu">
+              <span className="user-email">{user.email}</span>
+              <button className="auth-btn logout-btn" onClick={logout}>
+                Sign Out
+              </button>
+            </div>
+          ) : (
+            <button className="auth-btn login-btn" onClick={() => setShowAuthModal(true)}>
+              Sign In
+            </button>
+          )}
+        </div>
       </div>
+      <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
     </motion.header>
   );
 }
