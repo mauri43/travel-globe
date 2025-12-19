@@ -3308,6 +3308,13 @@ body {
   z-index: 10001;
 }
 
+/* Globe spotlight - no cyan border, just the cutout */
+.tour-spotlight.tour-spotlight-no-border {
+  border: none;
+  border-radius: 50%;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.85);
+}
+
 .tour-tooltip {
   position: fixed;
   background: var(--void-surface);

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useStore } from '../store';
 import { updateTourCompleted } from '../services/api';
@@ -7,15 +7,17 @@ interface TourStep {
   target: string;
   title: string;
   description: string;
-  position: 'top' | 'bottom' | 'left' | 'right';
+  position: 'top' | 'bottom' | 'left' | 'right' | 'bottom-right';
+  hideSpotlightBorder?: boolean;
 }
 
 const TOUR_STEPS: TourStep[] = [
   {
-    target: '', // No target - shows centered tooltip for welcome/globe intro
+    target: '[data-tour-target="globe"]',
     title: 'Welcome to Travel Globe!',
     description: 'This is your interactive 3D globe. Drag to rotate and explore your travel memories. Scroll to zoom in and out. Each glowing marker represents a place you\'ve visited.',
-    position: 'bottom'
+    position: 'bottom-right',
+    hideSpotlightBorder: true, // No cyan border for globe, just the cutout
   },
   {
     target: '[data-tour-target="stats"]',
@@ -59,6 +61,8 @@ export function OnboardingTour() {
   const { isTourActive, endTour } = useStore();
   const [currentStep, setCurrentStep] = useState(0);
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const lastRectRef = useRef<{ top: number; left: number; width: number; height: number } | null>(null);
 
   const currentStepData = TOUR_STEPS[currentStep];
   const isLastStep = currentStep === TOUR_STEPS.length - 1;
@@ -67,18 +71,18 @@ export function OnboardingTour() {
   const updateTargetPosition = useCallback(() => {
     if (!currentStepData) return;
 
-    // If no target specified, center the tooltip
-    if (!currentStepData.target) {
-      setTargetRect(null);
-      return;
-    }
-
     const element = document.querySelector(currentStepData.target);
     if (element) {
-      setTargetRect(element.getBoundingClientRect());
-    } else {
-      // If element not found, use center of screen
-      setTargetRect(null);
+      const rect = element.getBoundingClientRect();
+      setTargetRect(rect);
+      // Store last known position for smooth transitions
+      lastRectRef.current = {
+        top: rect.top - 8,
+        left: rect.left - 8,
+        width: rect.width + 16,
+        height: rect.height + 16,
+      };
+      setIsTransitioning(false);
     }
   }, [currentStepData]);
 
@@ -87,7 +91,7 @@ export function OnboardingTour() {
     if (!isTourActive) return;
 
     // Small delay to ensure DOM elements are rendered
-    const timeout = setTimeout(updateTargetPosition, 100);
+    const timeout = setTimeout(updateTargetPosition, 50);
     window.addEventListener('resize', updateTargetPosition);
 
     return () => {
@@ -100,8 +104,8 @@ export function OnboardingTour() {
     if (isLastStep) {
       handleFinish();
     } else {
-      // Reset targetRect so tooltip centers while finding new element
-      setTargetRect(null);
+      // Mark as transitioning - keep spotlight in place, hide tooltip briefly
+      setIsTransitioning(true);
       setCurrentStep(prev => prev + 1);
     }
   };
@@ -114,28 +118,43 @@ export function OnboardingTour() {
     }
     endTour();
     setCurrentStep(0);
+    lastRectRef.current = null;
   };
 
   // Calculate tooltip position based on target element and preferred position
   const getTooltipStyle = (): React.CSSProperties => {
-    if (!targetRect) {
-      // Center on screen if no target
+    // During transition, hide tooltip to prevent flash
+    if (isTransitioning) {
       return {
         position: 'fixed',
-        top: '50%',
-        left: '50%',
-        transform: 'translate(-50%, -50%)',
+        opacity: 0,
+        pointerEvents: 'none',
+      };
+    }
+
+    if (!targetRect) {
+      return {
+        position: 'fixed',
+        opacity: 0,
+        pointerEvents: 'none',
       };
     }
 
     const padding = 20;
     const tooltipWidth = 380;
-    const tooltipHeight = 200; // Approximate
+    const tooltipHeight = 200;
     const style: React.CSSProperties = {
       position: 'fixed',
+      opacity: 1,
+      transition: 'opacity 0.2s ease',
     };
 
     switch (currentStepData.position) {
+      case 'bottom-right':
+        // Position in bottom-right area of screen for globe intro
+        style.bottom = padding + 60; // Above footer
+        style.right = padding;
+        break;
       case 'bottom':
         style.top = targetRect.bottom + padding;
         style.left = Math.max(padding, Math.min(
@@ -175,32 +194,39 @@ export function OnboardingTour() {
 
   // Get arrow position class
   const getArrowClass = (): string => {
-    if (!targetRect) return '';
+    if (!targetRect || currentStepData.position === 'bottom-right') return '';
     return `tour-arrow-${currentStepData.position}`;
   };
 
   if (!isTourActive) return null;
 
-  // Fallback if step data is somehow missing
   const stepTitle = currentStepData?.title || 'Welcome';
   const stepDescription = currentStepData?.description || 'Let us show you around!';
+  const showCyanBorder = !currentStepData?.hideSpotlightBorder;
+
+  // Get spotlight position - use current rect or last known rect during transition
+  const spotlightRect = targetRect || (lastRectRef.current ? {
+    top: lastRectRef.current.top + 8,
+    left: lastRectRef.current.left + 8,
+    width: lastRectRef.current.width - 16,
+    height: lastRectRef.current.height - 16,
+    bottom: 0, right: 0, x: 0, y: 0, toJSON: () => {}
+  } as DOMRect : null);
 
   return (
     <div className="tour-overlay" role="dialog" aria-modal="true">
-      {/* Dark backdrop - only show when no spotlight (centered welcome message) */}
-      {!targetRect && <div className="tour-backdrop" />}
-
-      {/* Spotlight highlight around target element - box-shadow creates the dark overlay */}
-      {targetRect && (
+      {/* Spotlight - always render if we have a position, animate between positions */}
+      {(targetRect || lastRectRef.current) && (
         <motion.div
-          className="tour-spotlight"
+          className={`tour-spotlight ${showCyanBorder ? '' : 'tour-spotlight-no-border'}`}
+          initial={false}
           animate={{
-            top: targetRect.top - 8,
-            left: targetRect.left - 8,
-            width: targetRect.width + 16,
-            height: targetRect.height + 16,
+            top: targetRect ? targetRect.top - 8 : lastRectRef.current!.top,
+            left: targetRect ? targetRect.left - 8 : lastRectRef.current!.left,
+            width: targetRect ? targetRect.width + 16 : lastRectRef.current!.width,
+            height: targetRect ? targetRect.height + 16 : lastRectRef.current!.height,
           }}
-          transition={{ duration: 0.3 }}
+          transition={{ duration: 0.4, ease: 'easeInOut' }}
           style={{ position: 'fixed' }}
         />
       )}
@@ -210,8 +236,10 @@ export function OnboardingTour() {
         className="tour-tooltip"
         style={getTooltipStyle()}
       >
-        {/* Arrow pointing to target */}
-        {targetRect && currentStepData && <div className={`tour-arrow ${getArrowClass()}`} />}
+        {/* Arrow pointing to target - not for bottom-right position */}
+        {targetRect && currentStepData && currentStepData.position !== 'bottom-right' && (
+          <div className={`tour-arrow ${getArrowClass()}`} />
+        )}
 
         {/* Content */}
         <div className="tour-content">
