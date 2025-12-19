@@ -1,18 +1,23 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from './AuthContext';
 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
+  defaultIsSignup?: boolean;
 }
 
-export function AuthModal({ isOpen, onClose }: AuthModalProps) {
-  const [isSignup, setIsSignup] = useState(false);
+export function AuthModal({ isOpen, onClose, defaultIsSignup = false }: AuthModalProps) {
+  const [isSignup, setIsSignup] = useState(defaultIsSignup);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    setIsSignup(defaultIsSignup);
+  }, [defaultIsSignup]);
   const [loading, setLoading] = useState(false);
 
   const { login, signup } = useAuth();

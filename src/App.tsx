@@ -5,9 +5,32 @@ import { AdminPanel } from './components/AdminPanel';
 import { AddButton } from './components/AddButton';
 import { PlacesList } from './components/PlacesList';
 import { TagFilter } from './components/TagFilter';
+import { LandingPage } from './components/LandingPage';
+import { useAuth } from './components/AuthContext';
 import './App.css';
 
 function App() {
+  const { user, loading } = useAuth();
+
+  // Show loading state while checking auth
+  if (loading) {
+    return (
+      <div className="app loading-screen">
+        <div className="loading-spinner">
+          <div className="spinner-ring" />
+          <div className="spinner-ring" />
+          <div className="spinner-ring" />
+        </div>
+      </div>
+    );
+  }
+
+  // Show landing page if not logged in
+  if (!user) {
+    return <LandingPage />;
+  }
+
+  // Show globe app if logged in
   return (
     <div className="app">
       {/* Background gradient overlay */}
