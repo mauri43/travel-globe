@@ -69,22 +69,30 @@ export async function parseFlightEmail(
   subject: string,
   body: string
 ): Promise<ParserResult> {
+  console.log('parseFlightEmail called with subject:', subject);
+
   // First, try to detect the airline
   const airline = detectAirline(from, subject, body);
+  console.log('Detected airline/source:', airline);
 
   // If we detected an airline, try its specific parser
   if (airline) {
     const parser = getParser(airline);
     if (parser) {
+      console.log('Using parser for:', airline);
       const result = parser(subject, body);
+      console.log('Parser result:', JSON.stringify(result, null, 2));
       if (result.success && result.flight && result.flight.confidence >= 0.7) {
         return result;
       }
+      console.log('Parser failed or low confidence, trying generic...');
     }
   }
 
   // Try generic pattern matching
+  console.log('Using generic parser');
   const genericResult = parseGeneric(subject, body);
+  console.log('Generic result:', JSON.stringify(genericResult, null, 2));
   if (genericResult.success && genericResult.flight && genericResult.flight.confidence >= 0.6) {
     return genericResult;
   }

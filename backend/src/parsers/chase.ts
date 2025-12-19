@@ -4,6 +4,8 @@ export function parseChase(subject: string, body: string): ParserResult {
   const fullText = `${subject}\n${body}`;
 
   console.log('Chase parser processing email...');
+  console.log('Subject:', subject);
+  console.log('Body preview (first 500 chars):', body.substring(0, 500));
 
   // Chase Trip ID pattern
   const tripIdMatch = fullText.match(/Trip\s*ID[:\s#]*(\d+)/i);
@@ -19,12 +21,35 @@ export function parseChase(subject: string, body: string): ParserResult {
   let origin: string | null = null;
   let destination: string | null = null;
 
+  console.log('Airport codes in parens found:', airportCodesInParens);
+
   if (airportCodesInParens && airportCodesInParens.length >= 2) {
     // Extract just the codes from "(IAD)" format
     const codes = airportCodesInParens.map(match => match.replace(/[()]/g, ''));
     origin = codes[0];
     destination = codes[1];
     console.log(`Found airport codes: ${origin} -> ${destination}`);
+  } else {
+    // Fallback: look for common route patterns like "IAD ⇄ KEF" or "IAD to KEF"
+    const routeMatch = fullText.match(/([A-Z]{3})\s*(?:⇄|↔|→|->|to|-)\s*([A-Z]{3})/);
+    if (routeMatch) {
+      origin = routeMatch[1];
+      destination = routeMatch[2];
+      console.log(`Found airport codes via route pattern: ${origin} -> ${destination}`);
+    } else {
+      // Last resort: find all standalone 3-letter uppercase codes
+      const allCodes = fullText.match(/\b[A-Z]{3}\b/g);
+      console.log('All 3-letter codes found:', allCodes);
+      // Filter to known airport code patterns (exclude common words)
+      const excluded = ['THE', 'AND', 'FOR', 'YOU', 'ARE', 'NOT', 'HAS', 'WAS', 'USD', 'EST', 'PST', 'CST', 'MST', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC', 'JAN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+      const filteredCodes = allCodes?.filter(c => !excluded.includes(c)) || [];
+      console.log('Filtered codes:', filteredCodes);
+      if (filteredCodes.length >= 2) {
+        origin = filteredCodes[0];
+        destination = filteredCodes[1];
+        console.log(`Found airport codes via fallback: ${origin} -> ${destination}`);
+      }
+    }
   }
 
   // Detect airline from email content
