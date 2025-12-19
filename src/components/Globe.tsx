@@ -1,5 +1,5 @@
 import { useRef, useMemo } from 'react';
-import { useFrame, useLoader } from '@react-three/fiber';
+import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { CityMarker } from './CityMarker';
 import { CountryBorders } from './CountryBorders';
@@ -110,45 +110,13 @@ export function Globe() {
     return origins;
   }, [filteredCities]);
 
-  // Load land mask texture
-  const landMaskTexture = useLoader(
-    THREE.TextureLoader,
-    'https://raw.githubusercontent.com/turban/webgl-earth/master/images/earth-specular.jpg'
-  );
-
-  // Ocean/land material with texture-based masking
+  // Simple ocean material - deep navy blue for water
+  // Land will be distinguished by the cyan country borders
   const oceanMaterial = useMemo(() => {
-    if (!landMaskTexture) return new THREE.MeshBasicMaterial({ color: '#0a1628' });
-
-    return new THREE.ShaderMaterial({
-      uniforms: {
-        landMask: { value: landMaskTexture },
-        oceanColor: { value: new THREE.Color(0x00ff00) }, // TEST GREEN
-        landColor: { value: new THREE.Color(0x0a0a12) },  // Dark (almost black)
-      },
-      vertexShader: `
-        varying vec2 vUv;
-        void main() {
-          vUv = uv;
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        }
-      `,
-      fragmentShader: `
-        uniform sampler2D landMask;
-        uniform vec3 oceanColor;
-        uniform vec3 landColor;
-        varying vec2 vUv;
-
-        void main() {
-          float mask = texture2D(landMask, vUv).r;
-          // Invert: specular map has bright land, dark water
-          // We want dark land, colored water
-          vec3 color = mix(oceanColor, landColor, mask);
-          gl_FragColor = vec4(color, 1.0);
-        }
-      `,
+    return new THREE.MeshBasicMaterial({
+      color: new THREE.Color(0x0a1525), // Deep navy blue
     });
-  }, [landMaskTexture]);
+  }, []);
 
   // Glow material for atmosphere - reduced intensity
   const glowMaterial = useMemo(() => {
