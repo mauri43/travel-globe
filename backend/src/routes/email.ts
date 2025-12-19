@@ -77,6 +77,8 @@ router.post('/inbound', upload.any(), async (req: Request, res: Response) => {
     const userId = userDoc.id;
 
     console.log(`Found user: ${userId}`);
+    console.log(`Email body length: ${emailBody.length} chars`);
+    console.log(`Email body preview: ${emailBody.substring(0, 300)}`);
 
     // Parse the flight email
     const parseResult = await parseFlightEmail(emailFrom, emailSubject, emailBody);
