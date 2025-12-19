@@ -194,10 +194,9 @@ export function OnboardingTour() {
       )}
 
       {/* Tooltip */}
-      <motion.div
+      <div
         className="tour-tooltip"
-        animate={getTooltipStyle()}
-        transition={{ duration: 0.3 }}
+        style={getTooltipStyle()}
       >
         {/* Arrow pointing to target */}
         {targetRect && <div className={`tour-arrow ${getArrowClass()}`} />}
@@ -227,7 +226,7 @@ export function OnboardingTour() {
             </button>
           </div>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 }
