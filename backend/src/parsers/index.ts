@@ -5,6 +5,7 @@ import { parseSouthwest } from './southwest';
 import { parseSpirit } from './spirit';
 import { parseFrontier } from './frontier';
 import { parseDelta } from './delta';
+import { parseChase } from './chase';
 import { parseGeneric } from './generic';
 import { parseWithClaude } from './claude-fallback';
 
@@ -38,6 +39,7 @@ function detectAirline(from: string, subject: string, body: string): string | nu
   }
 
   // Check for booking sites
+  if (content.includes('chase travel') || content.includes('chase.com/travel') || content.includes('trip id:')) return 'chase';
   if (content.includes('expedia.com')) return 'expedia';
   if (content.includes('kayak.com')) return 'kayak';
   if (content.includes('google.com/travel') || content.includes('google flights')) return 'google';
@@ -56,6 +58,7 @@ function getParser(airline: string): ((subject: string, body: string) => ParserR
     'spirit': parseSpirit,
     'frontier': parseFrontier,
     'delta': parseDelta,
+    'chase': parseChase,
   };
 
   return parsers[airline] || null;
