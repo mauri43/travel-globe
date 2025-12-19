@@ -26,6 +26,8 @@ const getAllowedOrigins = () => {
     normalizedUrl,
     'http://localhost:5173',
     'https://travel-globe-ten.vercel.app',
+    'https://mytravelglobe.org',
+    'https://www.mytravelglobe.org',
   ];
 };
 
