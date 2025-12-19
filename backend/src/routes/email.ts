@@ -212,11 +212,11 @@ router.post('/test', upload.any(), (req: Request, res: Response) => {
 // Debug endpoint to check recent email-sourced cities
 router.get('/debug/recent', async (req: Request, res: Response) => {
   try {
+    // Simple query without compound index
     const citiesSnapshot = await db()
       .collection('cities')
       .where('source', '==', 'email')
-      .orderBy('createdAt', 'desc')
-      .limit(10)
+      .limit(20)
       .get();
 
     const cities = citiesSnapshot.docs.map(doc => ({
