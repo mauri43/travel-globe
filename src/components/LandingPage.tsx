@@ -179,7 +179,7 @@ export function LandingPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.6 }}
           >
-            Every journey
+            Every Journey
             <br />
             <span className="hero-title-accent">becomes a star</span>
           </motion.h1>
