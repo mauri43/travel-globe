@@ -141,8 +141,9 @@ export function OnboardingTour() {
     }
 
     const padding = 20;
+    const bottomBuffer = 100; // Extra space for footer and visibility
     const tooltipWidth = 380;
-    const tooltipHeight = 200;
+    const tooltipHeight = 240; // Actual height with all content
     const style: React.CSSProperties = {
       position: 'fixed',
       opacity: 1,
@@ -172,14 +173,14 @@ export function OnboardingTour() {
       case 'right':
         style.top = Math.max(padding, Math.min(
           targetRect.top + targetRect.height / 2 - tooltipHeight / 2,
-          window.innerHeight - tooltipHeight - padding
+          window.innerHeight - tooltipHeight - bottomBuffer
         ));
         style.left = targetRect.right + padding;
         break;
       case 'left':
         style.top = Math.max(padding, Math.min(
           targetRect.top + targetRect.height / 2 - tooltipHeight / 2,
-          window.innerHeight - tooltipHeight - padding
+          window.innerHeight - tooltipHeight - bottomBuffer
         ));
         style.left = targetRect.left - tooltipWidth - padding;
         // If tooltip goes off-screen left, flip to right
