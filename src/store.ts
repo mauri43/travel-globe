@@ -185,13 +185,13 @@ export const useStore = create<ExtendedAppState>()(
       setCities: (cities) => set({ cities }),
 
       loadCitiesFromApi: async () => {
-        set({ isLoading: true });
+        set({ isLoading: true, cities: [] }); // Clear cities first
         try {
           const cities = await api.getCities();
-          set({ cities, isLoading: false });
+          set({ cities: cities || [], isLoading: false });
         } catch (error) {
           console.error('Failed to load cities:', error);
-          set({ isLoading: false });
+          set({ cities: [], isLoading: false }); // Keep empty on error
         }
       },
 

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Scene } from './components/Scene';
 import { Header } from './components/Header';
 import { MemoryModal } from './components/MemoryModal';
@@ -6,11 +7,14 @@ import { AddButton } from './components/AddButton';
 import { PlacesList } from './components/PlacesList';
 import { TagFilter } from './components/TagFilter';
 import { LandingPage } from './components/LandingPage';
+import { SettingsButton } from './components/SettingsButton';
+import { SettingsPanel } from './components/SettingsPanel';
 import { useAuth } from './components/AuthContext';
 import './App.css';
 
 function App() {
   const { user, loading } = useAuth();
+  const [isSettingsOpen, setSettingsOpen] = useState(false);
 
   // Show loading state while checking auth
   if (loading) {
@@ -47,6 +51,12 @@ function App() {
 
       {/* Tag Filter */}
       <TagFilter />
+
+      {/* Settings Button */}
+      <SettingsButton onClick={() => setSettingsOpen(true)} />
+
+      {/* Settings Panel */}
+      <SettingsPanel isOpen={isSettingsOpen} onClose={() => setSettingsOpen(false)} />
 
       {/* Memory Modal */}
       <MemoryModal />
