@@ -24,6 +24,9 @@ function detectAirline(from: string, subject: string, body: string): string | nu
   if (content.includes('priceline.com')) return 'priceline';
 
   // Then check for direct airline emails
+  if (content.includes('avianca.com') || content.includes('avianca')) {
+    return 'avianca';
+  }
   if (content.includes('united.com') || content.includes('united airlines')) {
     return 'united';
   }

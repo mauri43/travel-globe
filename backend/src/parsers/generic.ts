@@ -1,14 +1,18 @@
 import { ParserResult } from './types';
+import { isValidAirportCode, findAirportCodes } from './airport-codes';
 
 // Common patterns for flight confirmations
-const AIRPORT_CODE_PATTERN = /\b([A-Z]{3})\b/g;
 const DATE_PATTERNS = [
   // MM/DD/YYYY or MM-DD-YYYY
   /(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/g,
-  // Month DD, YYYY
-  /(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+(\d{1,2}),?\s+(\d{4})/gi,
-  // DD Month YYYY
-  /(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+(\d{4})/gi,
+  // Month DD, YYYY (English)
+  /(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+(\d{1,2}),?\s+(\d{4})/gi,
+  // DD Month YYYY (English)
+  /(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+(\d{4})/gi,
+  // Spanish: DD Mes. YYYY (e.g., "23 Ene. 2025")
+  /(\d{1,2})\s+(Ene|Feb|Mar|Abr|May|Jun|Jul|Ago|Sep|Oct|Nov|Dic)\.?\s+(\d{4})/gi,
+  // Spanish: Mes DD, YYYY
+  /(Ene|Feb|Mar|Abr|May|Jun|Jul|Ago|Sep|Oct|Nov|Dic)[a-z]*\.?\s+(\d{1,2}),?\s+(\d{4})/gi,
   // YYYY-MM-DD (ISO)
   /(\d{4})-(\d{2})-(\d{2})/g,
 ];
@@ -29,12 +33,20 @@ const CONFIRMATION_PATTERNS = [
   /booking\s+(?:code|reference|number)[:\s#]+([A-Z0-9]{5,8})/gi,
   /record\s+locator[:\s#]+([A-Z0-9]{5,8})/gi,
   /PNR[:\s#]+([A-Z0-9]{6})/gi,
+  // Spanish patterns
+  /c[oó]digo\s+de\s+reserva[:\s#]+([A-Z0-9]{5,8})/gi,
+  /reserva[:\s#]+([A-Z0-9]{5,8})/gi,
+  /n[uú]mero\s+de\s+confirmaci[oó]n[:\s#]+([A-Z0-9]{5,8})/gi,
 ];
 
 const MONTH_MAP: Record<string, string> = {
+  // English
   'jan': '01', 'feb': '02', 'mar': '03', 'apr': '04',
   'may': '05', 'jun': '06', 'jul': '07', 'aug': '08',
   'sep': '09', 'oct': '10', 'nov': '11', 'dec': '12',
+  // Spanish
+  'ene': '01', 'abr': '04', 'ago': '08', 'dic': '12',
+  // Note: feb, mar, may, jun, jul, sep, oct, nov are same in Spanish
 };
 
 function parseDate(dateStr: string): string | null {
@@ -47,12 +59,20 @@ function parseDate(dateStr: string): string | null {
     return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
   }
 
-  // Month DD, YYYY
-  match = dateStr.match(/(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+(\d{1,2}),?\s+(\d{4})/i);
+  // Month DD, YYYY (English)
+  match = dateStr.match(/(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+(\d{1,2}),?\s+(\d{4})/i);
   if (match) {
     const [_, monthName, day, year] = match;
     const month = MONTH_MAP[monthName.toLowerCase().substring(0, 3)];
-    return `${year}-${month}-${day.padStart(2, '0')}`;
+    if (month) return `${year}-${month}-${day.padStart(2, '0')}`;
+  }
+
+  // DD Month YYYY (English or Spanish) - e.g., "23 Ene. 2025" or "23 Jan 2025"
+  match = dateStr.match(/(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec|Ene|Abr|Ago|Dic)[a-z]*\.?\s+(\d{4})/i);
+  if (match) {
+    const [_, day, monthName, year] = match;
+    const month = MONTH_MAP[monthName.toLowerCase().substring(0, 3)];
+    if (month) return `${year}-${month}-${day.padStart(2, '0')}`;
   }
 
   // YYYY-MM-DD
@@ -83,38 +103,45 @@ function extractDates(text: string): string[] {
 }
 
 function extractRoute(text: string): { origin: string; destination: string } | null {
+  // First, try route patterns that match valid airport codes
   for (const pattern of ROUTE_PATTERNS) {
     const regex = new RegExp(pattern.source, pattern.flags);
     const match = regex.exec(text);
     if (match) {
+      let origin: string | null = null;
+      let destination: string | null = null;
+
       // Different capture group positions based on pattern
       if (match.length >= 5) {
         // Pattern with city names and codes
-        return { origin: match[2], destination: match[4] };
+        origin = match[2].toUpperCase();
+        destination = match[4].toUpperCase();
       } else if (match.length >= 3) {
-        return { origin: match[1], destination: match[2] };
+        origin = match[1].toUpperCase();
+        destination = match[2].toUpperCase();
+      }
+
+      // Only return if both are valid airport codes
+      if (origin && destination && isValidAirportCode(origin) && isValidAirportCode(destination)) {
+        console.log(`Found valid route via pattern: ${origin} -> ${destination}`);
+        return { origin, destination };
       }
     }
   }
 
-  // Fallback: find all airport codes and assume first is origin, last is destination
-  const codes: string[] = [];
-  let match;
-  const codeRegex = new RegExp(AIRPORT_CODE_PATTERN.source, AIRPORT_CODE_PATTERN.flags);
-  while ((match = codeRegex.exec(text)) !== null) {
-    const code = match[1];
-    // Filter out common non-airport codes
-    if (!['THE', 'AND', 'FOR', 'YOU', 'ARE', 'NOT', 'HAS', 'WAS', 'USD', 'EST', 'PST', 'CST', 'MST'].includes(code)) {
-      if (!codes.includes(code)) {
-        codes.push(code);
-      }
-    }
+  // Fallback: find all VALID airport codes in the text
+  const validCodes = findAirportCodes(text);
+  console.log(`Found valid airport codes in text: ${validCodes.join(', ')}`);
+
+  if (validCodes.length >= 2) {
+    // First code is origin, second is destination (for round trips, codes often repeat)
+    const origin = validCodes[0];
+    const destination = validCodes[1];
+    console.log(`Using codes: ${origin} -> ${destination}`);
+    return { origin, destination };
   }
 
-  if (codes.length >= 2) {
-    return { origin: codes[0], destination: codes[codes.length - 1] };
-  }
-
+  console.log('Could not find valid airport codes');
   return null;
 }
 

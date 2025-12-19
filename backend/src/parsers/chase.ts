@@ -1,4 +1,5 @@
 import { ParserResult } from './types';
+import { isValidAirportCode, findAirportCodes } from './airport-codes';
 
 export function parseChase(subject: string, body: string): ParserResult {
   const fullText = `${subject}\n${body}`;
@@ -16,7 +17,6 @@ export function parseChase(subject: string, body: string): ParserResult {
   const confirmation = confirmMatch ? confirmMatch[1] : undefined;
 
   // Look for airport codes in parentheses - "Washington (IAD)" or "(KEF)"
-  // This is more reliable than trying to match the full route pattern
   const airportCodesInParens = fullText.match(/\(([A-Z]{3})\)/g);
   let origin: string | null = null;
   let destination: string | null = null;
@@ -24,31 +24,27 @@ export function parseChase(subject: string, body: string): ParserResult {
   console.log('Airport codes in parens found:', airportCodesInParens);
 
   if (airportCodesInParens && airportCodesInParens.length >= 2) {
-    // Extract just the codes from "(IAD)" format
-    const codes = airportCodesInParens.map(match => match.replace(/[()]/g, ''));
-    origin = codes[0];
-    destination = codes[1];
-    console.log(`Found airport codes: ${origin} -> ${destination}`);
-  } else {
-    // Fallback: look for common route patterns like "IAD ⇄ KEF" or "IAD to KEF"
-    const routeMatch = fullText.match(/([A-Z]{3})\s*(?:⇄|↔|→|->|to|-)\s*([A-Z]{3})/);
-    if (routeMatch) {
-      origin = routeMatch[1];
-      destination = routeMatch[2];
-      console.log(`Found airport codes via route pattern: ${origin} -> ${destination}`);
-    } else {
-      // Last resort: find all standalone 3-letter uppercase codes
-      const allCodes = fullText.match(/\b[A-Z]{3}\b/g);
-      console.log('All 3-letter codes found:', allCodes);
-      // Filter to known airport code patterns (exclude common words)
-      const excluded = ['THE', 'AND', 'FOR', 'YOU', 'ARE', 'NOT', 'HAS', 'WAS', 'USD', 'EST', 'PST', 'CST', 'MST', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC', 'JAN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
-      const filteredCodes = allCodes?.filter(c => !excluded.includes(c)) || [];
-      console.log('Filtered codes:', filteredCodes);
-      if (filteredCodes.length >= 2) {
-        origin = filteredCodes[0];
-        destination = filteredCodes[1];
-        console.log(`Found airport codes via fallback: ${origin} -> ${destination}`);
-      }
+    // Extract just the codes from "(IAD)" format and validate them
+    const codes = airportCodesInParens
+      .map(match => match.replace(/[()]/g, ''))
+      .filter(code => isValidAirportCode(code));
+
+    if (codes.length >= 2) {
+      origin = codes[0];
+      destination = codes[1];
+      console.log(`Found valid airport codes in parens: ${origin} -> ${destination}`);
+    }
+  }
+
+  // If not found in parens, use the comprehensive airport code finder
+  if (!origin || !destination) {
+    const validCodes = findAirportCodes(fullText);
+    console.log('Valid airport codes found in text:', validCodes);
+
+    if (validCodes.length >= 2) {
+      origin = validCodes[0];
+      destination = validCodes[1];
+      console.log(`Found valid airport codes: ${origin} -> ${destination}`);
     }
   }
 
