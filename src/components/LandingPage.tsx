@@ -242,38 +242,6 @@ export function LandingPage() {
           </motion.div>
         </main>
 
-        {/* Globe preview */}
-        <motion.div
-          className="landing-globe-preview"
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 1.2, delay: 0.8 }}
-        >
-          <div className="globe-preview-glow" />
-          <div className="globe-preview-ring ring-1" />
-          <div className="globe-preview-ring ring-2" />
-          <div className="globe-preview-ring ring-3" />
-          <div className="globe-preview-core">
-            <svg viewBox="0 0 100 100" fill="none">
-              <circle cx="50" cy="50" r="45" stroke="currentColor" strokeWidth="0.5" opacity="0.3" />
-              <ellipse cx="50" cy="50" rx="45" ry="18" stroke="currentColor" strokeWidth="0.5" opacity="0.3" />
-              <ellipse cx="50" cy="50" rx="45" ry="18" stroke="currentColor" strokeWidth="0.5" opacity="0.3" transform="rotate(60 50 50)" />
-              <ellipse cx="50" cy="50" rx="45" ry="18" stroke="currentColor" strokeWidth="0.5" opacity="0.3" transform="rotate(120 50 50)" />
-              <line x1="50" y1="5" x2="50" y2="95" stroke="currentColor" strokeWidth="0.5" opacity="0.3" />
-              {/* Marker dots */}
-              <circle cx="65" cy="35" r="3" fill="#ff6b35" />
-              <circle cx="30" cy="55" r="3" fill="#ff6b35" />
-              <circle cx="70" cy="60" r="3" fill="#ff6b35" />
-              <circle cx="45" cy="25" r="3" fill="#ff6b35" />
-              <circle cx="55" cy="70" r="3" fill="#ff6b35" />
-              {/* Connection lines */}
-              <path d="M65 35 Q 50 20 30 55" stroke="#00f5ff" strokeWidth="0.5" opacity="0.6" fill="none" />
-              <path d="M30 55 Q 50 65 70 60" stroke="#00f5ff" strokeWidth="0.5" opacity="0.6" fill="none" />
-              <path d="M45 25 Q 55 45 55 70" stroke="#00f5ff" strokeWidth="0.5" opacity="0.6" fill="none" />
-            </svg>
-          </div>
-        </motion.div>
-
         {/* Footer */}
         <motion.footer
           className="landing-footer"
