@@ -39,7 +39,7 @@ function detectAirline(from: string, subject: string, body: string): string | nu
   }
 
   // Check for booking sites
-  if (content.includes('chase travel') || content.includes('chase.com/travel') || content.includes('trip id:')) return 'chase';
+  if (content.includes('chase travel') || content.includes('chase.com/travel') || content.includes('trip id') || content.includes('travel reservation center')) return 'chase';
   if (content.includes('expedia.com')) return 'expedia';
   if (content.includes('kayak.com')) return 'kayak';
   if (content.includes('google.com/travel') || content.includes('google flights')) return 'google';
