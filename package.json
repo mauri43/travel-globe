@@ -14,6 +14,7 @@
     "@react-three/fiber": "^9.4.2",
     "@types/three": "^0.182.0",
     "@types/uuid": "^10.0.0",
+    "earcut": "^3.0.2",
     "firebase": "^12.7.0",
     "framer-motion": "^12.23.26",
     "react": "^19.2.0",
@@ -24,6 +25,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
+    "@types/earcut": "^3.0.0",
     "@types/google.maps": "^3.58.1",
     "@types/node": "^24.10.1",
     "@types/react": "^19.2.5",
