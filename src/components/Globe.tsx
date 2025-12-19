@@ -117,33 +117,26 @@ export function Globe() {
     const loader = new THREE.TextureLoader();
     loader.load(
       '/textures/earth-water.png',
-      (texture) => {
-        console.log('Texture loaded successfully');
-        setLandTexture(texture);
-      },
+      (texture) => setLandTexture(texture),
       undefined,
-      (error) => {
-        console.error('Failed to load texture:', error);
-      }
+      (error) => console.error('Failed to load texture:', error)
     );
   }, []);
 
   // Ocean/land material with texture-based masking
   const oceanMaterial = useMemo(() => {
     if (!landTexture) {
-      // Fallback while loading - bright red so we know texture didn't load
-      console.log('Land texture not loaded yet');
+      // Fallback while loading
       return new THREE.MeshBasicMaterial({
-        color: new THREE.Color(0xff0000),
+        color: new THREE.Color(0x050508),
       });
     }
 
-    console.log('Land texture loaded, creating shader material');
     return new THREE.ShaderMaterial({
       uniforms: {
         landMask: { value: landTexture },
-        oceanColor: { value: new THREE.Color(0x00ff00) }, // BRIGHT GREEN ocean
-        landColor: { value: new THREE.Color(0x0a0a0f) },  // Very dark land
+        oceanColor: { value: new THREE.Color(0x0a1a2e) }, // Dark blue ocean
+        landColor: { value: new THREE.Color(0x050508) },  // Black land
       },
       vertexShader: `
         varying vec2 vUv;
