@@ -195,4 +195,18 @@ router.get('/health', (req: Request, res: Response) => {
   res.json({ status: 'ok', service: 'email' });
 });
 
+// Test endpoint to verify webhook is reachable
+router.post('/test', upload.any(), (req: Request, res: Response) => {
+  console.log('Test webhook received:', {
+    body: req.body,
+    files: req.files,
+    headers: req.headers,
+  });
+  res.json({
+    success: true,
+    message: 'Webhook is working',
+    receivedFields: Object.keys(req.body || {}),
+  });
+});
+
 export default router;
