@@ -116,13 +116,14 @@ export function Globe() {
   useEffect(() => {
     const loader = new THREE.TextureLoader();
     loader.load(
-      '/textures/earth-land.jpg',
+      '/textures/earth-water.png',
       (texture) => {
+        console.log('Texture loaded successfully');
         setLandTexture(texture);
       },
       undefined,
       (error) => {
-        console.error('Failed to load land texture:', error);
+        console.error('Failed to load texture:', error);
       }
     );
   }, []);
@@ -159,9 +160,9 @@ export function Globe() {
 
         void main() {
           float mask = texture2D(landMask, vUv).r;
-          // Specular map: bright = land, dark = water
-          // So we mix: low mask = ocean, high mask = land
-          vec3 color = mix(oceanColor, landColor, mask);
+          // earth-water.png: bright = water, dark = land
+          // So we mix: high mask = ocean, low mask = land
+          vec3 color = mix(landColor, oceanColor, mask);
           gl_FragColor = vec4(color, 1.0);
         }
       `,
