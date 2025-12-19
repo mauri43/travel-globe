@@ -24,7 +24,7 @@ export function LandingPage() {
   };
 
   // Generate stars once and memoize them
-  const stars = useMemo(() => Array.from({ length: 150 }, (_, i) => ({
+  const stars = useMemo(() => Array.from({ length: 195 }, (_, i) => ({
     id: i,
     x: Math.random() * 100,
     y: Math.random() * 100,
