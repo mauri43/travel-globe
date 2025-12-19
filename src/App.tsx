@@ -6,6 +6,7 @@ import { AdminPanel } from './components/AdminPanel';
 import { AddButton } from './components/AddButton';
 import { PlacesList } from './components/PlacesList';
 import { TagFilter } from './components/TagFilter';
+import { RefreshButton } from './components/RefreshButton';
 import { LandingPage } from './components/LandingPage';
 import { SettingsButton } from './components/SettingsButton';
 import { SettingsPanel } from './components/SettingsPanel';
@@ -51,6 +52,9 @@ function App() {
 
       {/* Tag Filter */}
       <TagFilter />
+
+      {/* Refresh Button */}
+      <RefreshButton />
 
       {/* Settings Button */}
       <SettingsButton onClick={() => setSettingsOpen(true)} />

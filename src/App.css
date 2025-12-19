@@ -2085,6 +2085,57 @@ body {
 }
 
 /* ================================================
+   REFRESH BUTTON
+   ================================================ */
+.refresh-btn {
+  position: fixed;
+  bottom: var(--space-xl);
+  left: calc(var(--space-xl) + 60px);
+  z-index: 100;
+  width: 48px;
+  height: 48px;
+  border: none;
+  border-radius: 50%;
+  background: var(--void-surface);
+  border: 1px solid var(--void-border);
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition-fast);
+}
+
+.refresh-btn:hover {
+  background: var(--void-elevated);
+  color: var(--cyan-glow);
+  border-color: var(--cyan-dim);
+}
+
+.refresh-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.refresh-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+.refresh-btn.refreshing svg {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ================================================
    TRIP NAME INPUT
    ================================================ */
 .trip-name-input {

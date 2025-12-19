@@ -159,10 +159,12 @@ const sampleCities: City[] = [
 interface ExtendedAppState extends AppState {
   isLoggedIn: boolean;
   isLoading: boolean;
+  isRefreshing: boolean;
   setLoggedIn: (loggedIn: boolean) => void;
   setLoading: (loading: boolean) => void;
   setCities: (cities: City[]) => void;
   loadCitiesFromApi: () => Promise<void>;
+  refreshCities: () => Promise<void>;
   addCityWithApi: (city: Omit<City, 'id'>) => Promise<City>;
   updateCityWithApi: (id: string, updates: Partial<City>) => Promise<void>;
   deleteCityWithApi: (id: string) => Promise<void>;
@@ -179,6 +181,7 @@ export const useStore = create<ExtendedAppState>()(
       activeTagFilters: [],
       isLoggedIn: false,
       isLoading: false,
+      isRefreshing: false,
 
       setLoggedIn: (loggedIn) => set({ isLoggedIn: loggedIn }),
       setLoading: (loading) => set({ isLoading: loading }),
@@ -192,6 +195,20 @@ export const useStore = create<ExtendedAppState>()(
         } catch (error) {
           console.error('Failed to load cities:', error);
           set({ cities: [], isLoading: false }); // Keep empty on error
+        }
+      },
+
+      refreshCities: async () => {
+        const { isLoggedIn } = get();
+        if (!isLoggedIn) return;
+
+        set({ isRefreshing: true });
+        try {
+          const cities = await api.getCities();
+          set({ cities: cities || [], isRefreshing: false });
+        } catch (error) {
+          console.error('Failed to refresh cities:', error);
+          set({ isRefreshing: false });
         }
       },
 
