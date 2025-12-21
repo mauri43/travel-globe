@@ -171,3 +171,10 @@ export async function updateTourCompleted(completed: boolean) {
     body: JSON.stringify({ tourCompleted: completed }),
   });
 }
+
+export async function updateDefaultFromCity(city: { name: string; lat: number; lng: number }) {
+  return fetchWithAuth('/api/auth/default-from-city', {
+    method: 'PUT',
+    body: JSON.stringify({ defaultFromCity: city }),
+  });
+}

@@ -118,6 +118,13 @@ body {
   z-index: 100;
   padding: var(--space-lg) var(--space-xl);
   background: linear-gradient(to bottom, var(--void-black) 0%, transparent 100%);
+  pointer-events: none; /* Allow globe drag through header area */
+}
+
+/* Re-enable pointer events for interactive header elements */
+.header .logo-section,
+.header .stats-container {
+  pointer-events: auto;
 }
 
 .header-content {
@@ -1018,6 +1025,34 @@ body {
   flex: 1;
 }
 
+/* Date Range (FROM/TO) */
+.date-range-container {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.date-range-field {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.date-range-label {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.date-range-separator {
+  color: var(--cyan-glow);
+  font-size: 1.2rem;
+  margin-top: var(--space-md);
+}
+
 .remove-btn {
   width: 32px;
   height: 32px;
@@ -1444,6 +1479,86 @@ body {
 .tag-input-row button:hover {
   background: var(--void-border);
   color: var(--text-primary);
+}
+
+/* Tag Suggestions Dropdown */
+.tag-suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--void-surface);
+  border: 1px solid var(--void-border);
+  border-radius: 8px;
+  margin-top: 4px;
+  max-height: 150px;
+  overflow-y: auto;
+  z-index: 10;
+}
+
+.tag-suggestion-item {
+  display: block;
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  background: transparent;
+  border: none;
+  text-align: left;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.tag-suggestion-item:hover {
+  background: var(--void-elevated);
+  color: var(--cyan-glow);
+}
+
+/* Tag Quick Add */
+.tag-quick-add {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin-top: var(--space-sm);
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--void-border);
+}
+
+.tag-quick-label {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.tag-quick-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+}
+
+.tag-quick-item {
+  padding: 4px 10px;
+  background: var(--void-elevated);
+  border: 1px solid var(--void-border);
+  border-radius: 12px;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.tag-quick-item:hover {
+  border-color: var(--cyan-dim);
+  color: var(--cyan-glow);
+}
+
+/* Make tag input row relative for dropdown positioning */
+.tag-input-row {
+  position: relative;
 }
 
 /* Form Actions */
@@ -3023,6 +3138,56 @@ body {
   color: var(--cyan-glow);
   font-family: var(--font-mono);
   font-size: 0.85rem;
+}
+
+/* Default Origin */
+.default-origin-display {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  background: var(--void-deep);
+  border-radius: 8px;
+  margin-bottom: var(--space-md);
+}
+
+.default-origin-display .origin-label {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.default-origin-display .origin-city {
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  color: var(--cyan-glow);
+}
+
+.default-origin-search {
+  position: relative;
+}
+
+.default-origin-search input {
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--void-deep);
+  border: 1px solid var(--void-border);
+  border-radius: 8px;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  transition: var(--transition-fast);
+}
+
+.default-origin-search input:focus {
+  outline: none;
+  border-color: var(--cyan-dim);
+}
+
+.default-origin-search input::placeholder {
+  color: var(--text-tertiary);
 }
 
 /* Account Info */

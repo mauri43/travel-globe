@@ -80,6 +80,32 @@ router.put('/tour-completed', requireAuth, async (req: AuthRequest, res: Respons
   }
 });
 
+// Update default from city
+router.put('/default-from-city', requireAuth, async (req: AuthRequest, res: Response) => {
+  try {
+    const { defaultFromCity } = req.body;
+
+    if (!defaultFromCity || typeof defaultFromCity.name !== 'string' ||
+        typeof defaultFromCity.lat !== 'number' || typeof defaultFromCity.lng !== 'number') {
+      return res.status(400).json({ error: 'defaultFromCity must have name, lat, and lng' });
+    }
+
+    await db().collection('users').doc(req.user!.uid).set({
+      defaultFromCity: {
+        name: defaultFromCity.name,
+        lat: defaultFromCity.lat,
+        lng: defaultFromCity.lng,
+      },
+      updatedAt: new Date().toISOString(),
+    }, { merge: true });
+
+    res.json({ defaultFromCity });
+  } catch (error) {
+    console.error('Error updating default from city:', error);
+    res.status(500).json({ error: 'Failed to update default from city' });
+  }
+});
+
 // Delete account and all data
 router.delete('/account', requireAuth, async (req: AuthRequest, res: Response) => {
   try {

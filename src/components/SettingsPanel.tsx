@@ -1,13 +1,59 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from './AuthContext';
-import { getUserProfile, updateTrustedEmails } from '../services/api';
+import { getUserProfile, updateTrustedEmails, updateDefaultFromCity } from '../services/api';
 import { useStore } from '../store';
+
+// Google Places API key
+const GOOGLE_PLACES_API_KEY = 'AIzaSyB9TQe9WP_CBsVtJ6Z7WxjaygP8B1yxwTY';
+
+// Load Google Places script
+let googleScriptLoaded = false;
+const loadGooglePlacesScript = (): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    if (googleScriptLoaded && window.google?.maps?.places) {
+      resolve();
+      return;
+    }
+    if (document.querySelector('script[src*="maps.googleapis.com/maps/api/js"]')) {
+      const checkLoaded = setInterval(() => {
+        if (window.google?.maps?.places) {
+          clearInterval(checkLoaded);
+          googleScriptLoaded = true;
+          resolve();
+        }
+      }, 100);
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_PLACES_API_KEY}&libraries=places`;
+    script.async = true;
+    script.defer = true;
+    script.onload = () => {
+      googleScriptLoaded = true;
+      resolve();
+    };
+    script.onerror = reject;
+    document.head.appendChild(script);
+  });
+};
+
+interface DefaultFromCity {
+  name: string;
+  lat: number;
+  lng: number;
+}
 
 interface SettingsPanelProps {
   isOpen: boolean;
   onClose: () => void;
 }
+
+const DEFAULT_FROM_CITY: DefaultFromCity = {
+  name: 'Washington, DC',
+  lat: 38.9072,
+  lng: -77.0369,
+};
 
 export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
   const { user, logout } = useAuth();
@@ -19,9 +65,22 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
+  // Default from city state
+  const [defaultFromCity, setDefaultFromCity] = useState<DefaultFromCity>(DEFAULT_FROM_CITY);
+  const [fromCitySearch, setFromCitySearch] = useState('');
+  const [fromCityPredictions, setFromCityPredictions] = useState<google.maps.places.AutocompletePrediction[]>([]);
+  const [showFromCityPredictions, setShowFromCityPredictions] = useState(false);
+  const autocompleteServiceRef = useRef<google.maps.places.AutocompleteService | null>(null);
+  const placesServiceRef = useRef<google.maps.places.PlacesService | null>(null);
+
   useEffect(() => {
     if (isOpen && user) {
       loadProfile();
+      loadGooglePlacesScript().then(() => {
+        autocompleteServiceRef.current = new window.google.maps.places.AutocompleteService();
+        const dummyDiv = document.createElement('div');
+        placesServiceRef.current = new window.google.maps.places.PlacesService(dummyDiv);
+      }).catch(err => console.error('Failed to load Google Places:', err));
     }
   }, [isOpen, user]);
 
@@ -30,15 +89,80 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
     try {
       const profile = await getUserProfile();
       setTrustedEmails(profile.trustedEmails || []);
+      if (profile.defaultFromCity) {
+        setDefaultFromCity(profile.defaultFromCity);
+      }
     } catch (err) {
       console.error('Failed to load profile:', err);
-      // If profile doesn't exist yet, start with user's email
       if (user?.email) {
         setTrustedEmails([user.email]);
       }
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Search cities for default from
+  const searchFromCities = useCallback((input: string) => {
+    if (!input || input.length < 2 || !autocompleteServiceRef.current) {
+      setFromCityPredictions([]);
+      return;
+    }
+    autocompleteServiceRef.current.getPlacePredictions(
+      { input, types: ['(cities)'] },
+      (results, status) => {
+        if (status === window.google.maps.places.PlacesServiceStatus.OK && results) {
+          setFromCityPredictions(results);
+          setShowFromCityPredictions(true);
+        } else {
+          setFromCityPredictions([]);
+        }
+      }
+    );
+  }, []);
+
+  // Debounced search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (fromCitySearch) {
+        searchFromCities(fromCitySearch);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [fromCitySearch, searchFromCities]);
+
+  const handleFromCitySelect = async (prediction: google.maps.places.AutocompletePrediction) => {
+    if (!placesServiceRef.current) return;
+
+    setFromCityPredictions([]);
+    setShowFromCityPredictions(false);
+
+    placesServiceRef.current.getDetails(
+      { placeId: prediction.place_id, fields: ['geometry', 'name'] },
+      async (place, status) => {
+        if (status === window.google.maps.places.PlacesServiceStatus.OK && place) {
+          const newCity: DefaultFromCity = {
+            name: place.name || prediction.structured_formatting.main_text,
+            lat: place.geometry?.location?.lat() || 0,
+            lng: place.geometry?.location?.lng() || 0,
+          };
+
+          setIsSaving(true);
+          setError('');
+          try {
+            await updateDefaultFromCity(newCity);
+            setDefaultFromCity(newCity);
+            setFromCitySearch('');
+            setSuccessMessage('Default origin updated');
+            setTimeout(() => setSuccessMessage(''), 3000);
+          } catch (err: any) {
+            setError(err.message || 'Failed to update default origin');
+          } finally {
+            setIsSaving(false);
+          }
+        }
+      }
+    );
   };
 
   const handleAddEmail = async () => {
@@ -152,6 +276,45 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                     </svg>
                     Take Tour
                   </button>
+                </div>
+              </div>
+
+              {/* Default Origin City Section */}
+              <div className="settings-section">
+                <h3>Default Origin</h3>
+                <p className="settings-description">
+                  Set your default departure city for new trips. This will be used when you don't specify a "Flew From" location.
+                </p>
+                <div className="default-origin-display">
+                  <span className="origin-label">Current:</span>
+                  <span className="origin-city">{defaultFromCity.name}</span>
+                </div>
+                <div className="default-origin-search">
+                  <input
+                    type="text"
+                    value={fromCitySearch}
+                    onChange={(e) => setFromCitySearch(e.target.value)}
+                    onFocus={() => fromCityPredictions.length > 0 && setShowFromCityPredictions(true)}
+                    onBlur={() => setTimeout(() => setShowFromCityPredictions(false), 200)}
+                    placeholder="Search for a new city..."
+                    autoComplete="off"
+                    disabled={isSaving}
+                  />
+                  {showFromCityPredictions && fromCityPredictions.length > 0 && (
+                    <div className="city-suggestions">
+                      {fromCityPredictions.map((prediction) => (
+                        <button
+                          key={prediction.place_id}
+                          type="button"
+                          className="suggestion-item"
+                          onClick={() => handleFromCitySelect(prediction)}
+                        >
+                          <span className="suggestion-name">{prediction.structured_formatting.main_text}</span>
+                          <span className="suggestion-country">{prediction.structured_formatting.secondary_text}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 

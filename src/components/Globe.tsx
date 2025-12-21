@@ -58,14 +58,33 @@ export function Globe() {
 
   // Check if a city/location is in the US
   const isUSLocation = (country: string | undefined, name?: string): boolean => {
-    if (country?.toLowerCase().includes('united states') || country?.toLowerCase() === 'usa' || country?.toLowerCase() === 'us') {
-      return true;
+    const countryLower = country?.toLowerCase().trim();
+
+    // Check country name variations
+    if (countryLower) {
+      const usCountryPatterns = ['united states', 'usa', 'u.s.a', 'u.s.', 'us', 'america'];
+      if (usCountryPatterns.some(pattern => countryLower === pattern || countryLower.includes('united states'))) {
+        return true;
+      }
+      // If country is explicitly NOT US, return false (don't check airport codes)
+      // This prevents false positives from airport codes in city names
+      if (countryLower && !usCountryPatterns.some(p => countryLower.includes(p))) {
+        return false;
+      }
     }
-    // Check for common US airport codes or city patterns in the name
-    const usAirportCodes = ['JFK', 'LAX', 'ORD', 'DFW', 'DEN', 'SFO', 'SEA', 'LAS', 'MCO', 'EWR', 'MIA', 'PHX', 'IAH', 'BOS', 'MSP', 'DTW', 'FLL', 'PHL', 'LGA', 'BWI', 'SLC', 'DCA', 'IAD', 'SAN', 'TPA', 'PDX', 'STL', 'HNL', 'BNA', 'AUS', 'OAK', 'SMF', 'SJC', 'RDU', 'CLE', 'MCI', 'SAT', 'IND', 'PIT', 'CMH', 'CVG', 'MKE', 'JAX', 'OMA', 'ABQ', 'ANC', 'BUF', 'OKC', 'RIC', 'TUL', 'SDF', 'GRR', 'BOI', 'BDL', 'ONT', 'PBI', 'RSW', 'ORF', 'BHM', 'TUS', 'ELP', 'ALB', 'ROC', 'SYR', 'PWM', 'DSM', 'LIT', 'GSO', 'RNO', 'CHS', 'MSY', 'ATL'];
-    if (name) {
+
+    // Only check airport codes if country is not set
+    if (!country && name) {
+      const usAirportCodes = ['JFK', 'LAX', 'ORD', 'DFW', 'DEN', 'SFO', 'SEA', 'LAS', 'MCO', 'EWR', 'MIA', 'PHX', 'IAH', 'BOS', 'MSP', 'DTW', 'FLL', 'PHL', 'LGA', 'BWI', 'SLC', 'DCA', 'IAD', 'SAN', 'TPA', 'PDX', 'STL', 'HNL', 'BNA', 'AUS', 'OAK', 'SMF', 'SJC', 'RDU', 'CLE', 'MCI', 'SAT', 'IND', 'PIT', 'CMH', 'CVG', 'MKE', 'JAX', 'OMA', 'ABQ', 'ANC', 'BUF', 'OKC', 'RIC', 'TUL', 'SDF', 'GRR', 'BOI', 'BDL', 'ONT', 'PBI', 'RSW', 'ORF', 'BHM', 'TUS', 'ELP', 'ALB', 'ROC', 'SYR', 'PWM', 'DSM', 'LIT', 'GSO', 'RNO', 'CHS', 'MSY', 'ATL'];
+      // Also check common US city names
+      const usCityNames = ['new york', 'los angeles', 'chicago', 'houston', 'phoenix', 'philadelphia', 'san antonio', 'san diego', 'dallas', 'san jose', 'austin', 'jacksonville', 'fort worth', 'columbus', 'charlotte', 'san francisco', 'indianapolis', 'seattle', 'denver', 'washington', 'boston', 'nashville', 'baltimore', 'oklahoma city', 'louisville', 'portland', 'las vegas', 'milwaukee', 'albuquerque', 'tucson', 'fresno', 'sacramento', 'mesa', 'atlanta', 'kansas city', 'colorado springs', 'miami', 'raleigh', 'omaha', 'long beach', 'virginia beach', 'oakland', 'minneapolis', 'tulsa', 'tampa', 'arlington', 'new orleans', 'newark', 'honolulu', 'anaheim', 'henderson', 'orlando', 'st. louis', 'pittsburgh', 'cincinnati', 'anchorage', 'detroit', 'cleveland'];
       const upperName = name.toUpperCase();
+      const lowerName = name.toLowerCase();
+
       if (usAirportCodes.some(code => upperName.includes(code))) {
+        return true;
+      }
+      if (usCityNames.some(city => lowerName.includes(city))) {
         return true;
       }
     }

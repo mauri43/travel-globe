@@ -52,7 +52,8 @@ interface FormData {
   flewFromLng: string;
   isOneWay: boolean;
   tripName: string;
-  dates: string[];
+  dateFrom: string;
+  dateTo: string;
   photos: string[];
   videos: string[];
   memories: string;
@@ -69,7 +70,8 @@ const initialFormData: FormData = {
   flewFromLng: '',
   isOneWay: false,
   tripName: '',
-  dates: [''],
+  dateFrom: '',
+  dateTo: '',
   photos: [],
   videos: [],
   memories: '',
@@ -117,6 +119,26 @@ export function AdminPanel() {
       trip.toLowerCase().includes(search)
     );
   }, [formData.tripName, existingTripNames]);
+
+  // Get all existing tags for autocomplete
+  const existingTags = useMemo(() => {
+    const tagSet = new Set<string>();
+    cities.forEach((city) => {
+      city.tags.forEach((tag) => tagSet.add(tag));
+    });
+    return Array.from(tagSet).sort();
+  }, [cities]);
+
+  // Filter tag suggestions based on input (exclude already selected tags)
+  const filteredTagSuggestions = useMemo(() => {
+    const available = existingTags.filter((tag) => !formData.tags.includes(tag));
+    if (!tagInput) return available;
+    const search = tagInput.toLowerCase();
+    return available.filter((tag) => tag.toLowerCase().includes(search));
+  }, [tagInput, existingTags, formData.tags]);
+
+  const [showTagSuggestions, setShowTagSuggestions] = useState(false);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const cityInputRef = useRef<HTMLInputElement>(null);
@@ -152,7 +174,8 @@ export function AdminPanel() {
         flewFromLng: editingCity.flewFrom?.coordinates.lng.toString() || '',
         isOneWay: editingCity.isOneWay || false,
         tripName: editingCity.tripName || '',
-        dates: editingCity.dates.length > 0 ? editingCity.dates : [''],
+        dateFrom: editingCity.dates[0] || '',
+        dateTo: editingCity.dates[1] || '',
         photos: editingCity.photos,
         videos: editingCity.videos,
         memories: editingCity.memories,
@@ -229,6 +252,10 @@ export function AdminPanel() {
   const handleCitySelect = (prediction: google.maps.places.AutocompletePrediction) => {
     if (!placesServiceRef.current) return;
 
+    // Immediately close dropdown
+    setPredictions([]);
+    setShowPredictions(false);
+
     placesServiceRef.current.getDetails(
       {
         placeId: prediction.place_id,
@@ -267,8 +294,6 @@ export function AdminPanel() {
           // Create new session token for next search
           sessionTokenRef.current = new window.google.maps.places.AutocompleteSessionToken();
         }
-        setPredictions([]);
-        setShowPredictions(false);
       }
     );
   };
@@ -324,6 +349,10 @@ export function AdminPanel() {
   const handleFlewFromSelect = (prediction: google.maps.places.AutocompletePrediction) => {
     if (!placesServiceRef.current) return;
 
+    // Immediately close dropdown
+    setFlewFromPredictions([]);
+    setShowFlewFromPredictions(false);
+
     placesServiceRef.current.getDetails(
       {
         placeId: prediction.place_id,
@@ -354,25 +383,8 @@ export function AdminPanel() {
 
           sessionTokenRef.current = new window.google.maps.places.AutocompleteSessionToken();
         }
-        setFlewFromPredictions([]);
-        setShowFlewFromPredictions(false);
       }
     );
-  };
-
-  const handleAddDate = () => {
-    setFormData({ ...formData, dates: [...formData.dates, ''] });
-  };
-
-  const handleRemoveDate = (index: number) => {
-    const newDates = formData.dates.filter((_, i) => i !== index);
-    setFormData({ ...formData, dates: newDates.length > 0 ? newDates : [''] });
-  };
-
-  const handleDateChange = (index: number, value: string) => {
-    const newDates = [...formData.dates];
-    newDates[index] = value;
-    setFormData({ ...formData, dates: newDates });
   };
 
   const handleAddTag = () => {
@@ -434,10 +446,18 @@ export function AdminPanel() {
       const videoFiles: File[] = [];
 
       for (let i = 0; i < files.length; i++) {
-        if (files[i].type.startsWith('image/')) {
-          imageFiles.push(files[i]);
-        } else if (files[i].type.startsWith('video/')) {
-          videoFiles.push(files[i]);
+        const file = files[i];
+        const fileName = file.name.toLowerCase();
+        // Check MIME type or file extension for HEIC/HEIF
+        const isImage = file.type.startsWith('image/') ||
+          fileName.endsWith('.heic') ||
+          fileName.endsWith('.heif');
+        const isVideo = file.type.startsWith('video/');
+
+        if (isImage) {
+          imageFiles.push(file);
+        } else if (isVideo) {
+          videoFiles.push(file);
         }
       }
 
@@ -502,7 +522,7 @@ export function AdminPanel() {
         flewFrom,
         isOneWay: formData.isOneWay,
         tripName: formData.tripName || undefined,
-        dates: formData.dates.filter((d) => d !== ''),
+        dates: [formData.dateFrom, formData.dateTo].filter((d) => d !== ''),
         photos: formData.photos,
         videos: formData.videos,
         memories: formData.memories,
@@ -626,30 +646,6 @@ export function AdminPanel() {
               />
             </div>
 
-            {/* Coordinates */}
-            <div className="form-row">
-              <div className="form-group">
-                <label>Latitude</label>
-                <input
-                  type="number"
-                  step="any"
-                  value={formData.lat}
-                  onChange={(e) => setFormData({ ...formData, lat: e.target.value })}
-                  placeholder="-90 to 90"
-                />
-              </div>
-              <div className="form-group">
-                <label>Longitude</label>
-                <input
-                  type="number"
-                  step="any"
-                  value={formData.lng}
-                  onChange={(e) => setFormData({ ...formData, lng: e.target.value })}
-                  placeholder="-180 to 180"
-                />
-              </div>
-            </div>
-
             {/* Flew From */}
             <div className="form-group">
               <label>Flew From (optional)</label>
@@ -702,29 +698,22 @@ export function AdminPanel() {
             {/* Dates */}
             <div className="form-group">
               <label>Visit Dates</label>
-              <div className="dates-container">
-                {formData.dates.map((date, index) => (
-                  <div key={index} className="date-row">
-                    <DatePicker
-                      value={date}
-                      onChange={(value) => handleDateChange(index, value)}
-                    />
-                    {formData.dates.length > 1 && (
-                      <button
-                        type="button"
-                        className="remove-btn"
-                        onClick={() => handleRemoveDate(index)}
-                      >
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M18 6L6 18M6 6l12 12" />
-                        </svg>
-                      </button>
-                    )}
-                  </div>
-                ))}
-                <button type="button" className="add-date-btn" onClick={handleAddDate}>
-                  + Add Date
-                </button>
+              <div className="date-range-container">
+                <div className="date-range-field">
+                  <span className="date-range-label">From</span>
+                  <DatePicker
+                    value={formData.dateFrom}
+                    onChange={(value) => setFormData({ ...formData, dateFrom: value })}
+                  />
+                </div>
+                <span className="date-range-separator">→</span>
+                <div className="date-range-field">
+                  <span className="date-range-label">To</span>
+                  <DatePicker
+                    value={formData.dateTo}
+                    onChange={(value) => setFormData({ ...formData, dateTo: value })}
+                  />
+                </div>
               </div>
             </div>
 
@@ -757,7 +746,7 @@ export function AdminPanel() {
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept="image/*"
+                  accept="image/*,.heic,.heif,image/heic,image/heif"
                   multiple
                   hidden
                   onChange={(e) => handleFileUpload(e.target.files, 'photos')}
@@ -880,12 +869,55 @@ export function AdminPanel() {
                     value={tagInput}
                     onChange={(e) => setTagInput(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag())}
+                    onFocus={() => setShowTagSuggestions(true)}
+                    onBlur={() => setTimeout(() => setShowTagSuggestions(false), 200)}
                     placeholder="Add a tag..."
+                    autoComplete="off"
                   />
                   <button type="button" onClick={handleAddTag}>
                     Add
                   </button>
                 </div>
+                {/* Tag autocomplete dropdown */}
+                {showTagSuggestions && filteredTagSuggestions.length > 0 && tagInput && (
+                  <div className="tag-suggestions">
+                    {filteredTagSuggestions.slice(0, 5).map((tag) => (
+                      <button
+                        key={tag}
+                        type="button"
+                        className="tag-suggestion-item"
+                        onClick={() => {
+                          setFormData({ ...formData, tags: [...formData.tags, tag] });
+                          setTagInput('');
+                          setShowTagSuggestions(false);
+                        }}
+                      >
+                        {tag}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {/* Previous tags suggestions */}
+                {existingTags.length > 0 && (
+                  <div className="tag-quick-add">
+                    <span className="tag-quick-label">Quick add:</span>
+                    <div className="tag-quick-list">
+                      {existingTags
+                        .filter((tag) => !formData.tags.includes(tag))
+                        .slice(0, 8)
+                        .map((tag) => (
+                          <button
+                            key={tag}
+                            type="button"
+                            className="tag-quick-item"
+                            onClick={() => setFormData({ ...formData, tags: [...formData.tags, tag] })}
+                          >
+                            {tag}
+                          </button>
+                        ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
