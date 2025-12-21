@@ -112,8 +112,9 @@ export function OnboardingTour() {
         width: rect.width + 16,
         height: rect.height + 16,
       };
-      setIsTransitioning(false);
     }
+    // Always clear transitioning state, even if element not found
+    setIsTransitioning(false);
   }, [currentStepData]);
 
   // Update position on mount, step change, and window resize
@@ -140,15 +141,16 @@ export function OnboardingTour() {
     }
   };
 
-  const handleFinish = async () => {
-    try {
-      await updateTourCompleted(true);
-    } catch (error) {
-      console.error('Failed to save tour completion:', error);
-    }
+  const handleFinish = () => {
+    // Close tour immediately - don't wait for API
     endTour();
     setCurrentStep(0);
     lastRectRef.current = null;
+
+    // Save to API in background (don't block UI)
+    updateTourCompleted(true).catch(error => {
+      console.error('Failed to save tour completion:', error);
+    });
   };
 
   // Calculate tooltip position based on target element and preferred position
