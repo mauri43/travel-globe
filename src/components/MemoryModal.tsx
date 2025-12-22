@@ -14,7 +14,10 @@ export function MemoryModal() {
   if (!selectedCity) return null;
 
   const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
+    // Parse the date string directly to avoid timezone issues
+    // dateStr is in format "YYYY-MM-DD"
+    const [year, month, day] = dateStr.split('-').map(Number);
+    const date = new Date(year, month - 1, day); // month is 0-indexed
     return date.toLocaleDateString('en-US', {
       month: 'long',
       day: 'numeric',

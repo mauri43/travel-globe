@@ -36,8 +36,9 @@ app.use(cors({
   credentials: true,
 }));
 
-// Parse JSON for most routes
-app.use(express.json());
+// Parse JSON for most routes (increased limit for base64 photos)
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Health check
 app.get('/health', (req, res) => {

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '../store';
 import { DatePicker } from './DatePicker';
+import { getUserProfile } from '../services/api';
 
 // Google Places API key
 const GOOGLE_PLACES_API_KEY = 'AIzaSyB9TQe9WP_CBsVtJ6Z7WxjaygP8B1yxwTY';
@@ -78,8 +79,8 @@ const initialFormData: FormData = {
   tags: [],
 };
 
-// Default origin: Washington, DC
-const DEFAULT_ORIGIN = {
+// Default origin fallback: Washington, DC
+const FALLBACK_ORIGIN = {
   name: 'Washington, DC',
   coordinates: {
     lat: 38.9072,
@@ -87,10 +88,19 @@ const DEFAULT_ORIGIN = {
   },
 };
 
+interface DefaultOrigin {
+  name: string;
+  coordinates: {
+    lat: number;
+    lng: number;
+  };
+}
+
 export function AdminPanel() {
   const { cities, isAdminOpen, setAdminOpen, addCityWithApi, updateCityWithApi, deleteCityWithApi, editingCity, setEditingCity } = useStore();
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [tagInput, setTagInput] = useState('');
+  const [userDefaultOrigin, setUserDefaultOrigin] = useState<DefaultOrigin | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const [predictions, setPredictions] = useState<google.maps.places.AutocompletePrediction[]>([]);
   const [showPredictions, setShowPredictions] = useState(false);
@@ -145,8 +155,11 @@ export function AdminPanel() {
   const autocompleteServiceRef = useRef<google.maps.places.AutocompleteService | null>(null);
   const placesServiceRef = useRef<google.maps.places.PlacesService | null>(null);
   const sessionTokenRef = useRef<google.maps.places.AutocompleteSessionToken | null>(null);
+  // Flags to skip search after selection (prevents dropdown from reappearing)
+  const skipCitySearchRef = useRef(false);
+  const skipFlewFromSearchRef = useRef(false);
 
-  // Initialize Google Places
+  // Initialize Google Places and load user profile
   useEffect(() => {
     if (isAdminOpen) {
       loadGooglePlacesScript().then(() => {
@@ -157,6 +170,25 @@ export function AdminPanel() {
         sessionTokenRef.current = new window.google.maps.places.AutocompleteSessionToken();
       }).catch(err => {
         console.error('Failed to load Google Places:', err);
+      });
+
+      // Load user's default origin from profile (fresh fetch each time panel opens)
+      getUserProfile().then((profile) => {
+        if (profile.defaultFromCity) {
+          setUserDefaultOrigin({
+            name: profile.defaultFromCity.name,
+            coordinates: {
+              lat: profile.defaultFromCity.lat,
+              lng: profile.defaultFromCity.lng,
+            },
+          });
+        } else {
+          // No custom default set, use fallback
+          setUserDefaultOrigin(FALLBACK_ORIGIN);
+        }
+      }).catch(err => {
+        console.error('Failed to load user profile:', err);
+        setUserDefaultOrigin(FALLBACK_ORIGIN);
       });
     }
   }, [isAdminOpen]);
@@ -241,6 +273,11 @@ export function AdminPanel() {
   // Debounced search
   useEffect(() => {
     const timer = setTimeout(() => {
+      // Skip search if we just selected a city
+      if (skipCitySearchRef.current) {
+        skipCitySearchRef.current = false;
+        return;
+      }
       if (formData.name && !editingCity) {
         searchCities(formData.name);
       }
@@ -252,9 +289,10 @@ export function AdminPanel() {
   const handleCitySelect = (prediction: google.maps.places.AutocompletePrediction) => {
     if (!placesServiceRef.current) return;
 
-    // Immediately close dropdown
+    // Immediately close dropdown and skip next search
     setPredictions([]);
     setShowPredictions(false);
+    skipCitySearchRef.current = true;
 
     placesServiceRef.current.getDetails(
       {
@@ -338,6 +376,11 @@ export function AdminPanel() {
   // Debounced search for flew from
   useEffect(() => {
     const timer = setTimeout(() => {
+      // Skip search if we just selected a city
+      if (skipFlewFromSearchRef.current) {
+        skipFlewFromSearchRef.current = false;
+        return;
+      }
       if (formData.flewFromName) {
         searchFlewFromCities(formData.flewFromName);
       }
@@ -349,9 +392,10 @@ export function AdminPanel() {
   const handleFlewFromSelect = (prediction: google.maps.places.AutocompletePrediction) => {
     if (!placesServiceRef.current) return;
 
-    // Immediately close dropdown
+    // Immediately close dropdown and skip next search
     setFlewFromPredictions([]);
     setShowFlewFromPredictions(false);
+    skipFlewFromSearchRef.current = true;
 
     placesServiceRef.current.getDetails(
       {
@@ -501,7 +545,7 @@ export function AdminPanel() {
     setIsSaving(true);
 
     try {
-      // Determine flew from: use entered value or default to Washington, DC
+      // Determine flew from: use entered value or user's default origin
       const flewFrom = formData.flewFromName && formData.flewFromLat && formData.flewFromLng
         ? {
             name: formData.flewFromName,
@@ -510,7 +554,7 @@ export function AdminPanel() {
               lng: parseFloat(formData.flewFromLng),
             },
           }
-        : DEFAULT_ORIGIN;
+        : userDefaultOrigin || FALLBACK_ORIGIN;
 
       const cityData = {
         name: formData.name,
@@ -656,7 +700,7 @@ export function AdminPanel() {
                   onChange={(e) => setFormData({ ...formData, flewFromName: e.target.value, flewFromLat: '', flewFromLng: '' })}
                   onFocus={() => flewFromPredictions.length > 0 && setShowFlewFromPredictions(true)}
                   onBlur={() => setTimeout(() => setShowFlewFromPredictions(false), 200)}
-                  placeholder="Default: Washington, DC"
+                  placeholder={`Default: ${userDefaultOrigin?.name || 'Loading...'}`}
                   autoComplete="off"
                 />
                 {isLoadingFlewFrom && (
@@ -691,7 +735,7 @@ export function AdminPanel() {
                   />
                   <span className="checkbox-text">One-way flight (not round trip)</span>
                 </label>
-                <span className="form-hint">Leave origin empty to use Washington, DC</span>
+                <span className="form-hint">Leave origin empty to use {userDefaultOrigin?.name || 'default city'}</span>
               </div>
             </div>
 
@@ -879,7 +923,7 @@ export function AdminPanel() {
                   </button>
                 </div>
                 {/* Tag autocomplete dropdown */}
-                {showTagSuggestions && filteredTagSuggestions.length > 0 && tagInput && (
+                {showTagSuggestions && filteredTagSuggestions.length > 0 && (
                   <div className="tag-suggestions">
                     {filteredTagSuggestions.slice(0, 5).map((tag) => (
                       <button
