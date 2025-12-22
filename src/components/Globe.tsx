@@ -47,14 +47,34 @@ export function Globe() {
   const glowRef = useRef<THREE.Mesh>(null);
   const cities = useStore((state) => state.cities);
   const activeTagFilters = useStore((state) => state.activeTagFilters);
+  const activeTripFilters = useStore((state) => state.activeTripFilters);
+  const activeYearFilters = useStore((state) => state.activeYearFilters);
 
-  // Filter cities based on active tag filters
+  // Filter cities based on active filters (tags, trips, years)
   const filteredCities = useMemo(() => {
-    if (activeTagFilters.length === 0) return cities;
-    return cities.filter((city) =>
-      activeTagFilters.some((tag) => city.tags.includes(tag))
-    );
-  }, [cities, activeTagFilters]);
+    const hasTagFilters = activeTagFilters.length > 0;
+    const hasTripFilters = activeTripFilters.length > 0;
+    const hasYearFilters = activeYearFilters.length > 0;
+
+    if (!hasTagFilters && !hasTripFilters && !hasYearFilters) return cities;
+
+    return cities.filter((city) => {
+      // Check tag filter (OR logic - any matching tag)
+      const passesTagFilter = !hasTagFilters || activeTagFilters.some((tag) => city.tags.includes(tag));
+
+      // Check trip filter (OR logic - any matching trip)
+      const passesTripFilter = !hasTripFilters || (city.tripName && activeTripFilters.includes(city.tripName));
+
+      // Check year filter (OR logic - any matching year)
+      const passesYearFilter = !hasYearFilters || (city.dates && city.dates.length > 0 && (() => {
+        const year = parseInt(city.dates[0].split('-')[0], 10);
+        return activeYearFilters.includes(year);
+      })());
+
+      // All active filters must pass (AND logic between filter types)
+      return passesTagFilter && passesTripFilter && passesYearFilter;
+    });
+  }, [cities, activeTagFilters, activeTripFilters, activeYearFilters]);
 
   // Check if a city/location is in the US
   const isUSLocation = (country: string | undefined, name?: string): boolean => {

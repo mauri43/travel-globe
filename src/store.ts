@@ -182,6 +182,8 @@ export const useStore = create<ExtendedAppState>()(
       isPlacesListOpen: false,
       editingCity: null,
       activeTagFilters: [],
+      activeTripFilters: [],
+      activeYearFilters: [],
       isLoggedIn: false,
       isLoading: false,
       isRefreshing: false,
@@ -271,6 +273,21 @@ export const useStore = create<ExtendedAppState>()(
             ? state.activeTagFilters.filter((t) => t !== tag)
             : [...state.activeTagFilters, tag],
         })),
+      setActiveTripFilters: (trips) => set({ activeTripFilters: trips }),
+      toggleTripFilter: (trip) =>
+        set((state) => ({
+          activeTripFilters: state.activeTripFilters.includes(trip)
+            ? state.activeTripFilters.filter((t) => t !== trip)
+            : [...state.activeTripFilters, trip],
+        })),
+      setActiveYearFilters: (years) => set({ activeYearFilters: years }),
+      toggleYearFilter: (year) =>
+        set((state) => ({
+          activeYearFilters: state.activeYearFilters.includes(year)
+            ? state.activeYearFilters.filter((y) => y !== year)
+            : [...state.activeYearFilters, year],
+        })),
+      clearAllFilters: () => set({ activeTagFilters: [], activeTripFilters: [], activeYearFilters: [] }),
       startTour: () => set({ isTourActive: true }),
       endTour: () => set({ isTourActive: false }),
     }),
@@ -280,6 +297,8 @@ export const useStore = create<ExtendedAppState>()(
         // Only persist these fields for guest users
         cities: state.isLoggedIn ? [] : state.cities,
         activeTagFilters: state.activeTagFilters,
+        activeTripFilters: state.activeTripFilters,
+        activeYearFilters: state.activeYearFilters,
       }),
     }
   )

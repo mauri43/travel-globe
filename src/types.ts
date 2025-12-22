@@ -29,6 +29,8 @@ export interface AppState {
   isPlacesListOpen: boolean;
   editingCity: City | null;
   activeTagFilters: string[];
+  activeTripFilters: string[];
+  activeYearFilters: number[];
   addCity: (city: City) => void;
   updateCity: (id: string, city: Partial<City>) => void;
   deleteCity: (id: string) => void;
@@ -38,4 +40,9 @@ export interface AppState {
   setEditingCity: (city: City | null) => void;
   setActiveTagFilters: (tags: string[]) => void;
   toggleTagFilter: (tag: string) => void;
+  setActiveTripFilters: (trips: string[]) => void;
+  toggleTripFilter: (trip: string) => void;
+  setActiveYearFilters: (years: number[]) => void;
+  toggleYearFilter: (year: number) => void;
+  clearAllFilters: () => void;
 }
