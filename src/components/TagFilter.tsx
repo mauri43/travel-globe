@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '../store';
 
@@ -7,6 +7,7 @@ type MenuCategory = 'trips' | 'tags' | 'years' | null;
 export function TagFilter() {
   const [isOpen, setIsOpen] = useState(false);
   const [hoveredCategory, setHoveredCategory] = useState<MenuCategory>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const {
     cities,
     activeTagFilters,
@@ -17,6 +18,24 @@ export function TagFilter() {
     toggleYearFilter,
     clearAllFilters,
   } = useStore();
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+        setHoveredCategory(null);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen]);
 
   // Get all unique tags from all cities
   const allTags = useMemo(() => {
@@ -93,14 +112,14 @@ export function TagFilter() {
     <div
       className="tag-filter"
       data-tour-target="tag-filter"
-      onMouseLeave={() => {
-        setIsOpen(false);
-        setHoveredCategory(null);
-      }}
+      ref={containerRef}
     >
       <button
         className={`tag-filter-btn ${totalActiveFilters > 0 ? 'has-filters' : ''}`}
-        onMouseEnter={() => setIsOpen(true)}
+        onClick={() => {
+          setIsOpen(!isOpen);
+          if (isOpen) setHoveredCategory(null);
+        }}
       >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
