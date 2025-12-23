@@ -3,6 +3,7 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { CityMarker } from './CityMarker';
 import { CountryBorders } from './CountryBorders';
+import { CountryHover } from './CountryHover';
 import { FlightPaths } from './FlightPaths';
 import { useStore } from '../store';
 
@@ -234,6 +235,9 @@ export function Globe() {
 
       {/* Country borders - real geographic outlines */}
       <CountryBorders radius={2} />
+
+      {/* Country hover highlight and labels */}
+      <CountryHover radius={2} />
 
       {/* Outer glow effect - atmosphere (reduced) */}
       <mesh ref={glowRef} scale={1.08}>
