@@ -1,5 +1,6 @@
 import { useMemo, useEffect, useState } from 'react';
 import { Line } from '@react-three/drei';
+import { useTheme } from '../hooks/useTheme';
 
 // Convert lat/lng to 3D position on sphere
 function latLngToVector3(lat: number, lng: number, radius: number): [number, number, number] {
@@ -31,6 +32,7 @@ interface GeoJSONData {
 }
 
 export function CountryBorders({ radius = 2 }: { radius?: number }) {
+  const { currentTheme } = useTheme();
   const [geoData, setGeoData] = useState<GeoJSONData | null>(null);
 
   // Fetch GeoJSON data
@@ -83,7 +85,7 @@ export function CountryBorders({ radius = 2 }: { radius?: number }) {
     return (
       <mesh>
         <sphereGeometry args={[radius, 32, 32]} />
-        <meshBasicMaterial color="#00f5ff" wireframe transparent opacity={0.1} />
+        <meshBasicMaterial color={currentTheme.colors.borderColor} wireframe transparent opacity={0.1} />
       </mesh>
     );
   }
@@ -95,7 +97,7 @@ export function CountryBorders({ radius = 2 }: { radius?: number }) {
         <Line
           key={index}
           points={points}
-          color="#00f5ff"
+          color={currentTheme.colors.borderColor}
           lineWidth={1}
           transparent
           opacity={0.7}

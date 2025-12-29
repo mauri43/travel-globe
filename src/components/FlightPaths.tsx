@@ -3,7 +3,9 @@ import { useFrame } from '@react-three/fiber';
 import { Line } from '@react-three/drei';
 import * as THREE from 'three';
 import { useStore } from '../store';
+import { useTheme } from '../hooks/useTheme';
 import { latLngToVector3 } from './Globe';
+import { FlightParticleTrail } from './FlightParticleTrail';
 
 // Default origin: Washington, DC
 const DEFAULT_ORIGIN = {
@@ -83,6 +85,7 @@ interface FlightPathProps {
 }
 
 function FlightPath({ from, to, globeRadius, index }: FlightPathProps) {
+  const { currentTheme } = useTheme();
   const spriteRef = useRef<THREE.Sprite>(null);
   const [isVisible, setIsVisible] = useState(false);
   const [isReturning, setIsReturning] = useState(false);
@@ -223,13 +226,22 @@ function FlightPath({ from, to, globeRadius, index }: FlightPathProps) {
       {/* Flight path line */}
       <Line
         points={pathPoints}
-        color="#00f5ff"
+        color={currentTheme.colors.flightPathColor}
         transparent
         opacity={0.3}
         lineWidth={1}
       />
 
       {/* Animated plane sprite */}
+
+      {/* Particle trail for Platinum tier */}
+      {currentTheme.features?.particleTrails && isVisible && (
+        <FlightParticleTrail
+          path={pathPoints}
+          progress={isReturning ? 1 - progressRef.current : progressRef.current}
+          color={currentTheme.colors.flightPathColor}
+        />
+      )}
       {isVisible && (
         <sprite ref={spriteRef} material={spriteMaterial} />
       )}

@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { Html } from '@react-three/drei';
 import type { City } from '../types';
 import { useStore } from '../store';
+import { useTheme } from '../hooks/useTheme';
 import { latLngToVector3 } from './Globe';
 
 interface CityMarkerProps {
@@ -21,6 +22,7 @@ export function CityMarker({ city, globeRadius, isUS = false, isOrigin = false, 
   const lineRef = useRef<THREE.Mesh>(null);
   const [hovered, setHovered] = useState(false);
   const setSelectedCity = useStore((state) => state.setSelectedCity);
+  const { currentTheme } = useTheme();
 
   // Calculate position on globe surface
   const position = useMemo(() => {
@@ -65,10 +67,10 @@ export function CityMarker({ city, globeRadius, isUS = false, isOrigin = false, 
   const displayName = isOrigin && originName ? originName : city.name;
 
   // Colors - US cities are blue, international cities are orange/coral
-  const usColor = '#4a90d9';
-  const usHoverColor = '#6bb3ff';
-  const intlColor = '#ff6b35';
-  const intlHoverColor = '#ffd93d';
+  const usColor = currentTheme.colors.usMarkerColor;
+  const usHoverColor = currentTheme.colors.usMarkerHoverColor;
+  const intlColor = currentTheme.colors.intlMarkerColor;
+  const intlHoverColor = currentTheme.colors.intlMarkerHoverColor;
 
   const markerColor = isUS
     ? (hovered ? usHoverColor : usColor)

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { AppState, City } from './types';
+import type { ThemeTierId } from './config/themes';
 import * as api from './services/api';
 
 const sampleCities: City[] = [
@@ -171,6 +172,9 @@ interface ExtendedAppState extends AppState {
   deleteCityWithApi: (id: string) => Promise<void>;
   startTour: () => void;
   endTour: () => void;
+  // Theme state
+  selectedTheme: ThemeTierId;
+  setSelectedTheme: (themeId: ThemeTierId) => void;
 }
 
 export const useStore = create<ExtendedAppState>()(
@@ -188,6 +192,8 @@ export const useStore = create<ExtendedAppState>()(
       isLoading: false,
       isRefreshing: false,
       isTourActive: false,
+      // Theme initial state
+      selectedTheme: 'starter' as ThemeTierId,
 
       setLoggedIn: (loggedIn) => set({ isLoggedIn: loggedIn }),
       setLoading: (loading) => set({ isLoading: loading }),
@@ -290,6 +296,8 @@ export const useStore = create<ExtendedAppState>()(
       clearAllFilters: () => set({ activeTagFilters: [], activeTripFilters: [], activeYearFilters: [] }),
       startTour: () => set({ isTourActive: true }),
       endTour: () => set({ isTourActive: false }),
+      // Theme setter
+      setSelectedTheme: (themeId) => set({ selectedTheme: themeId }),
     }),
     {
       name: 'travel-globe-storage',
@@ -299,6 +307,8 @@ export const useStore = create<ExtendedAppState>()(
         activeTagFilters: state.activeTagFilters,
         activeTripFilters: state.activeTripFilters,
         activeYearFilters: state.activeYearFilters,
+        // Always persist theme selection
+        selectedTheme: state.selectedTheme,
       }),
     }
   )

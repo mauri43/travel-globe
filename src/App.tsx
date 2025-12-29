@@ -10,6 +10,9 @@ import { RefreshButton } from './components/RefreshButton';
 import { LandingPage } from './components/LandingPage';
 import { SettingsButton } from './components/SettingsButton';
 import { SettingsPanel } from './components/SettingsPanel';
+import { ThemeSelector } from './components/ThemeSelector';
+import { ThemeUnlockCelebration } from './components/ThemeUnlockCelebration';
+import { ThemeButton } from './components/ThemeButton';
 import { OnboardingTour } from './components/OnboardingTour';
 import { useAuth } from './components/AuthContext';
 import './App.css';
@@ -17,6 +20,7 @@ import './App.css';
 function App() {
   const { user, loading } = useAuth();
   const [isSettingsOpen, setSettingsOpen] = useState(false);
+  const [isThemeSelectorOpen, setThemeSelectorOpen] = useState(false);
 
   // Show loading state while checking auth
   if (loading) {
@@ -57,8 +61,17 @@ function App() {
       {/* Refresh Button */}
       <RefreshButton />
 
+      {/* Theme Button */}
+      <ThemeButton onClick={() => setThemeSelectorOpen(true)} />
+
       {/* Settings Button */}
       <SettingsButton onClick={() => setSettingsOpen(true)} />
+
+      {/* Theme Selector */}
+      <ThemeSelector isOpen={isThemeSelectorOpen} onClose={() => setThemeSelectorOpen(false)} />
+
+      {/* Theme Unlock Celebration */}
+      <ThemeUnlockCelebration />
 
       {/* Settings Panel */}
       <SettingsPanel isOpen={isSettingsOpen} onClose={() => setSettingsOpen(false)} />

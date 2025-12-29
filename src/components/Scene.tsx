@@ -1,6 +1,7 @@
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Stars, PerspectiveCamera } from '@react-three/drei';
 import { Globe } from './Globe';
+import { useTheme } from '../hooks/useTheme';
 import { ShootingStars } from './ShootingStars';
 import { Suspense } from 'react';
 
@@ -14,6 +15,7 @@ function LoadingFallback() {
 }
 
 export function Scene() {
+  const { currentTheme } = useTheme();
   return (
     <div className="canvas-container" data-tour-target="globe">
       <Canvas
@@ -29,7 +31,7 @@ export function Scene() {
         {/* Ambient lighting */}
         <ambientLight intensity={0.3} />
         <pointLight position={[10, 10, 10]} intensity={0.5} />
-        <pointLight position={[-10, -10, -10]} intensity={0.2} color="#00f5ff" />
+        <pointLight position={[-10, -10, -10]} intensity={0.2} color={currentTheme.colors.accentLightColor} />
 
         {/* Star background */}
         <Stars
@@ -37,7 +39,7 @@ export function Scene() {
           depth={50}
           count={5000}
           factor={4}
-          saturation={0}
+          saturation={currentTheme.colors.starSaturation}
           fade
           speed={0.5}
         />
@@ -48,7 +50,7 @@ export function Scene() {
           depth={60}
           count={2000}
           factor={6}
-          saturation={0.1}
+          saturation={currentTheme.colors.starSaturation * 1.5}
           fade
           speed={0.3}
         />

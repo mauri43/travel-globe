@@ -6,6 +6,7 @@ import { CountryBorders } from './CountryBorders';
 import { CountryHover } from './CountryHover';
 import { FlightPaths } from './FlightPaths';
 import { useStore } from '../store';
+import { useTheme } from '../hooks/useTheme';
 
 // Convert lat/lng to 3D position on sphere
 export function latLngToVector3(lat: number, lng: number, radius: number): THREE.Vector3 {
@@ -50,6 +51,7 @@ export function Globe() {
   const activeTagFilters = useStore((state) => state.activeTagFilters);
   const activeTripFilters = useStore((state) => state.activeTripFilters);
   const activeYearFilters = useStore((state) => state.activeYearFilters);
+  const { currentTheme } = useTheme();
 
   // Filter cities based on active filters (tags, trips, years)
   const filteredCities = useMemo(() => {
@@ -168,15 +170,15 @@ export function Globe() {
     if (!landTexture) {
       // Fallback while loading
       return new THREE.MeshBasicMaterial({
-        color: new THREE.Color(0x050508),
+        color: new THREE.Color(currentTheme.colors.landColor),
       });
     }
 
     return new THREE.ShaderMaterial({
       uniforms: {
         landMask: { value: landTexture },
-        oceanColor: { value: new THREE.Color(0x095880) }, // Deep blue ocean
-        landColor: { value: new THREE.Color(0x050508) },  // Black land
+        oceanColor: { value: new THREE.Color(currentTheme.colors.oceanColor) },
+        landColor: { value: new THREE.Color(currentTheme.colors.landColor) },
       },
       vertexShader: `
         varying vec2 vUv;
@@ -200,13 +202,13 @@ export function Globe() {
         }
       `,
     });
-  }, [landTexture]);
+  }, [landTexture, currentTheme]);
 
   // Glow material for atmosphere - reduced intensity
   const glowMaterial = useMemo(() => {
     return new THREE.ShaderMaterial({
       uniforms: {
-        glowColor: { value: new THREE.Color(0x00f5ff) },
+        glowColor: { value: new THREE.Color(currentTheme.colors.glowColor) },
         intensity: { value: 0.3 },
       },
       vertexShader: glowVertexShader,
@@ -215,7 +217,7 @@ export function Globe() {
       blending: THREE.AdditiveBlending,
       transparent: true,
     });
-  }, []);
+  }, [currentTheme]);
 
   // Animation loop for atmosphere pulsing - reduced range
   useFrame((state) => {
