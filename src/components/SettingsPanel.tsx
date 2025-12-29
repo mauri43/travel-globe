@@ -2,6 +2,9 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from './AuthContext';
 import { getUserProfile, updateTrustedEmails, updateDefaultFromCity } from '../services/api';
+import { SwipeToConfirm } from './SwipeToConfirm';
+import { lookupAirport, isValidAirportCode } from '../utils/airportLookup';
+import type { City } from '../types';
 import { useStore } from '../store';
 
 // Google Places API key
@@ -58,12 +61,26 @@ const DEFAULT_FROM_CITY: DefaultFromCity = {
 export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
   const { user, logout } = useAuth();
   const startTour = useStore((state) => state.startTour);
+  const clearAllCities = useStore((state) => state.clearAllCities);
+  const bulkAddCities = useStore((state) => state.bulkAddCities);
+  const cities = useStore((state) => state.cities);
   const [trustedEmails, setTrustedEmails] = useState<string[]>([]);
   const [newEmail, setNewEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+
+  // CSV Import state
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isImporting, setIsImporting] = useState(false);
+  const [importProgress, setImportProgress] = useState('');
+  const [importErrors, setImportErrors] = useState<string[]>([]);
+  const [importSuccess, setImportSuccess] = useState('');
+
+  // Clear all flights state
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
 
   // Default from city state
   const [defaultFromCity, setDefaultFromCity] = useState<DefaultFromCity>(DEFAULT_FROM_CITY);
@@ -225,6 +242,194 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
     onClose();
   };
 
+  // CSV Import handler
+  const handleCSVImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsImporting(true);
+    setImportErrors([]);
+    setImportSuccess('');
+    setImportProgress('Reading file...');
+
+    try {
+      const text = await file.text();
+      const lines = text.split(/\r?\n/).filter(line => line.trim());
+
+      if (lines.length < 2) {
+        setImportErrors(['CSV file must have a header row and at least one data row']);
+        setIsImporting(false);
+        return;
+      }
+
+      // Parse header row
+      const headers = parseCSVLine(lines[0]).map(h => h.toLowerCase().trim());
+      const originIdx = headers.findIndex(h => h.includes('origin') || h.includes('from') || h === 'departure');
+      const destIdx = headers.findIndex(h => h.includes('dest') || h.includes('to') || h === 'arrival');
+      const fromDateIdx = headers.findIndex(h => h.includes('from date') || h.includes('start') || h === 'departure date');
+      const toDateIdx = headers.findIndex(h => h.includes('to date') || h.includes('end') || h === 'arrival date' || h === 'return');
+      const tripIdx = headers.findIndex(h => h.includes('trip') || h.includes('name'));
+      const tagsIdx = headers.findIndex(h => h.includes('tag'));
+
+      if (originIdx === -1 || destIdx === -1) {
+        setImportErrors(['CSV must have Origin and Destination columns']);
+        setIsImporting(false);
+        return;
+      }
+
+      const errors: string[] = [];
+      const citiesToAdd: Omit<City, 'id'>[] = [];
+      const dataLines = lines.slice(1);
+
+      for (let i = 0; i < dataLines.length; i++) {
+        const line = dataLines[i];
+        if (!line.trim()) continue;
+
+        setImportProgress(`Processing row ${i + 1} of ${dataLines.length}...`);
+        const values = parseCSVLine(line);
+
+        const originCode = values[originIdx]?.trim().toUpperCase();
+        const destCode = values[destIdx]?.trim().toUpperCase();
+
+        if (!originCode || !destCode) {
+          errors.push(`Row ${i + 2}: Missing origin or destination airport code`);
+          continue;
+        }
+
+        if (!isValidAirportCode(originCode)) {
+          errors.push(`Row ${i + 2}: Invalid origin airport code "${originCode}"`);
+          continue;
+        }
+
+        if (!isValidAirportCode(destCode)) {
+          errors.push(`Row ${i + 2}: Invalid destination airport code "${destCode}"`);
+          continue;
+        }
+
+        // Look up airports
+        const [originAirport, destAirport] = await Promise.all([
+          lookupAirport(originCode),
+          lookupAirport(destCode)
+        ]);
+
+        if (!originAirport) {
+          errors.push(`Row ${i + 2}: Could not find airport "${originCode}"`);
+          continue;
+        }
+
+        if (!destAirport) {
+          errors.push(`Row ${i + 2}: Could not find airport "${destCode}"`);
+          continue;
+        }
+
+        // Parse dates (MM/DD/YYYY to YYYY-MM-DD)
+        let fromDate: string | undefined;
+        let toDate: string | undefined;
+
+        if (fromDateIdx !== -1 && values[fromDateIdx]?.trim()) {
+          fromDate = parseDate(values[fromDateIdx].trim());
+        }
+        if (toDateIdx !== -1 && values[toDateIdx]?.trim()) {
+          toDate = parseDate(values[toDateIdx].trim());
+        }
+
+        // Parse trip name
+        const tripName = tripIdx !== -1 ? values[tripIdx]?.trim() : undefined;
+
+        // Parse tags (comma-separated)
+        const tags: string[] = [];
+        if (tagsIdx !== -1 && values[tagsIdx]?.trim()) {
+          tags.push(...values[tagsIdx].split(',').map(t => t.trim()).filter(Boolean));
+        }
+
+        const city: Omit<City, 'id'> = {
+          name: destAirport.city,
+          country: destAirport.country,
+          coordinates: { lat: destAirport.lat, lng: destAirport.lng },
+          dates: fromDate && toDate ? [fromDate, toDate] : fromDate ? [fromDate] : [],
+          photos: [],
+          videos: [],
+          memories: '',
+          tags,
+          tripName,
+          flewFrom: {
+            name: originAirport.city,
+            coordinates: {
+              lat: originAirport.lat,
+              lng: originAirport.lng,
+            },
+          },
+        };
+
+        citiesToAdd.push(city);
+      }
+
+      if (citiesToAdd.length > 0) {
+        setImportProgress(`Adding ${citiesToAdd.length} flights...`);
+        await bulkAddCities(citiesToAdd);
+        setImportSuccess(`Successfully imported ${citiesToAdd.length} flight${citiesToAdd.length > 1 ? 's' : ''}`);
+      }
+
+      if (errors.length > 0) {
+        setImportErrors(errors);
+      }
+    } catch (err: any) {
+      setImportErrors([err.message || 'Failed to import CSV']);
+    } finally {
+      setIsImporting(false);
+      setImportProgress('');
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  // Parse a CSV line handling quoted fields
+  const parseCSVLine = (line: string): string[] => {
+    const result: string[] = [];
+    let current = '';
+    let inQuotes = false;
+
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      if (char === '"') {
+        inQuotes = !inQuotes;
+      } else if (char === ',' && !inQuotes) {
+        result.push(current);
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+    result.push(current);
+    return result;
+  };
+
+  // Parse MM/DD/YYYY to YYYY-MM-DD
+  const parseDate = (dateStr: string): string => {
+    const parts = dateStr.split('/');
+    if (parts.length === 3) {
+      const [month, day, year] = parts;
+      return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+    }
+    return dateStr;
+  };
+
+  // Clear all flights handler
+  const handleClearAllFlights = async () => {
+    setIsClearing(true);
+    try {
+      await clearAllCities();
+      setShowClearConfirm(false);
+      setSuccessMessage('All flights have been deleted');
+      setTimeout(() => setSuccessMessage(''), 3000);
+    } catch (err: any) {
+      setError(err.message || 'Failed to delete flights');
+    } finally {
+      setIsClearing(false);
+    }
+  };
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -372,6 +577,56 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                 )}
               </div>
 
+              {/* Import CSV Section */}
+              <div className="settings-section">
+                <h3>Import Flights</h3>
+                <p className="settings-description">
+                  Import flights from a CSV file. Required columns: <strong>Origin</strong> and <strong>Destination</strong> (airport codes like JFK, LAX).
+                  Optional: From Date, To Date (MM/DD/YYYY), Trip Name, Tags (comma-separated).
+                </p>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".csv"
+                  onChange={handleCSVImport}
+                  style={{ display: 'none' }}
+                />
+                <button
+                  className="import-csv-btn"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isImporting}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="17,8 12,3 7,8" />
+                    <line x1="12" y1="3" x2="12" y2="15" />
+                  </svg>
+                  {isImporting ? 'Importing...' : 'Choose CSV File'}
+                </button>
+
+                {importProgress && (
+                  <div className="import-progress">{importProgress}</div>
+                )}
+
+                {importSuccess && (
+                  <div className="settings-success">{importSuccess}</div>
+                )}
+
+                {importErrors.length > 0 && (
+                  <div className="import-errors">
+                    <strong>Import errors:</strong>
+                    <ul>
+                      {importErrors.slice(0, 10).map((err, idx) => (
+                        <li key={idx}>{err}</li>
+                      ))}
+                      {importErrors.length > 10 && (
+                        <li>...and {importErrors.length - 10} more errors</li>
+                      )}
+                    </ul>
+                  </div>
+                )}
+              </div>
+
               {/* How It Works Section */}
               <div className="settings-section">
                 <h3>How It Works</h3>
@@ -398,6 +653,46 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                     </div>
                   </div>
                 </div>
+              </div>
+
+              {/* Danger Zone Section */}
+              <div className="settings-section danger-zone">
+                <h3>Danger Zone</h3>
+                <p className="settings-description">
+                  Permanently delete all your flights. This action cannot be undone.
+                </p>
+
+                {!showClearConfirm ? (
+                  <button
+                    className="clear-flights-btn"
+                    onClick={() => setShowClearConfirm(true)}
+                    disabled={cities.length === 0}
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <polyline points="3,6 5,6 21,6" />
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                      <line x1="10" y1="11" x2="10" y2="17" />
+                      <line x1="14" y1="11" x2="14" y2="17" />
+                    </svg>
+                    Delete All Flights ({cities.length})
+                  </button>
+                ) : (
+                  <div className="clear-confirm">
+                    <SwipeToConfirm
+                      onConfirm={handleClearAllFlights}
+                      isLoading={isClearing}
+                      warningText={`This will permanently delete all ${cities.length} flight${cities.length !== 1 ? 's' : ''}. This action cannot be undone.`}
+                      confirmText="Swipe to delete all"
+                    />
+                    <button
+                      className="cancel-clear-btn"
+                      onClick={() => setShowClearConfirm(false)}
+                      disabled={isClearing}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </motion.div>

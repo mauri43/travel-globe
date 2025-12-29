@@ -170,6 +170,8 @@ interface ExtendedAppState extends AppState {
   addCityWithApi: (city: Omit<City, 'id'>) => Promise<City>;
   updateCityWithApi: (id: string, updates: Partial<City>) => Promise<void>;
   deleteCityWithApi: (id: string) => Promise<void>;
+  clearAllCities: () => Promise<void>;
+  bulkAddCities: (cities: Omit<City, 'id'>[]) => Promise<City[]>;
   startTour: () => void;
   endTour: () => void;
   // Theme state
@@ -267,6 +269,28 @@ export const useStore = create<ExtendedAppState>()(
         }
         deleteCity(id);
       },
+
+      clearAllCities: async () => {
+        const { isLoggedIn } = get();
+        if (isLoggedIn) {
+          await api.deleteAllCities();
+        }
+        set({ cities: [], selectedCity: null, editingCity: null });
+      },
+
+      bulkAddCities: async (citiesData) => {
+        const { isLoggedIn } = get();
+        if (isLoggedIn) {
+          const newCities = await api.bulkCreateCities(citiesData);
+          set((state) => ({ cities: [...state.cities, ...newCities] }));
+          return newCities;
+        } else {
+          const newCities = citiesData.map(city => ({ ...city, id: crypto.randomUUID() }));
+          set((state) => ({ cities: [...state.cities, ...newCities] }));
+          return newCities;
+        }
+      },
+
 
       setSelectedCity: (city) => set({ selectedCity: city }),
       setAdminOpen: (open) => set({ isAdminOpen: open }),

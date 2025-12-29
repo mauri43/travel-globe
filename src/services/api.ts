@@ -178,3 +178,53 @@ export async function updateDefaultFromCity(city: { name: string; lat: number; l
     body: JSON.stringify({ defaultFromCity: city }),
   });
 }
+
+// Delete all cities for the user
+export async function deleteAllCities(): Promise<void> {
+  await fetchWithAuth('/api/cities', {
+    method: 'DELETE',
+  });
+}
+
+// Bulk create cities (for CSV import)
+export async function bulkCreateCities(cities: Omit<City, 'id'>[]): Promise<City[]> {
+  const backendCities = cities.map(city => ({
+    name: city.name,
+    country: city.country,
+    lat: city.coordinates.lat,
+    lng: city.coordinates.lng,
+    flewFromName: city.flewFrom?.name,
+    flewFromLat: city.flewFrom?.coordinates.lat,
+    flewFromLng: city.flewFrom?.coordinates.lng,
+    isOneWay: city.isOneWay,
+    tripName: city.tripName,
+    dates: city.dates,
+    photos: city.photos || [],
+    videos: city.videos || [],
+    memories: city.memories || '',
+    tags: city.tags || [],
+  }));
+
+  const data = await fetchWithAuth('/api/cities/bulk', {
+    method: 'POST',
+    body: JSON.stringify({ cities: backendCities }),
+  });
+
+  return data.map((item: any) => ({
+    id: item.id,
+    name: item.name,
+    country: item.country,
+    coordinates: { lat: item.lat, lng: item.lng },
+    flewFrom: item.flewFromName ? {
+      name: item.flewFromName,
+      coordinates: { lat: item.flewFromLat, lng: item.flewFromLng },
+    } : undefined,
+    isOneWay: item.isOneWay,
+    tripName: item.tripName,
+    dates: item.dates,
+    photos: item.photos,
+    videos: item.videos,
+    memories: item.memories,
+    tags: item.tags,
+  }));
+}

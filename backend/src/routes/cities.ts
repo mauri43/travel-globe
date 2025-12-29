@@ -172,6 +172,32 @@ router.put('/:id', requireAuth, async (req: AuthRequest, res: Response) => {
   }
 });
 
+// Delete all cities for the authenticated user
+router.delete('/', requireAuth, async (req: AuthRequest, res: Response) => {
+  try {
+    const snapshot = await db()
+      .collection('cities')
+      .where('userId', '==', req.user!.uid)
+      .get();
+
+    if (snapshot.empty) {
+      return res.json({ message: 'No cities to delete', deleted: 0 });
+    }
+
+    // Delete in batches (Firestore limit is 500 per batch)
+    const batch = db().batch();
+    snapshot.docs.forEach((doc) => {
+      batch.delete(doc.ref);
+    });
+    await batch.commit();
+
+    res.json({ message: 'All cities deleted successfully', deleted: snapshot.size });
+  } catch (error) {
+    console.error('Error deleting all cities:', error);
+    res.status(500).json({ error: 'Failed to delete cities' });
+  }
+});
+
 // Delete a city
 router.delete('/:id', requireAuth, async (req: AuthRequest, res: Response) => {
   try {
