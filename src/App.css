@@ -2324,7 +2324,7 @@ body {
 .refresh-btn {
   position: fixed;
   bottom: var(--space-xl);
-  left: calc(var(--space-xl) + 140px);
+  left: calc(var(--space-xl) + 168px);
   z-index: 100;
   width: 48px;
   height: 48px;
@@ -3772,7 +3772,7 @@ body {
 .theme-button {
   position: fixed;
   bottom: var(--space-xl);
-  left: calc(var(--space-xl) + 84px);
+  left: calc(var(--space-xl) + 112px);
   width: 48px;
   height: 48px;
   border-radius: 50%;
@@ -4237,7 +4237,7 @@ body {
   }
 
   .theme-button {
-    left: calc(var(--space-lg) + 72px);
+    left: calc(var(--space-lg) + 96px);
     bottom: var(--space-lg);
     width: 44px;
     height: 44px;
