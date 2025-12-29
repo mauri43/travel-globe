@@ -2324,7 +2324,7 @@ body {
 .refresh-btn {
   position: fixed;
   bottom: var(--space-xl);
-  left: calc(var(--space-xl) + 112px);
+  left: calc(var(--space-xl) + 140px);
   z-index: 100;
   width: 48px;
   height: 48px;
@@ -3771,8 +3771,8 @@ body {
 /* Theme Button */
 .theme-button {
   position: fixed;
-  bottom: var(--space-lg);
-  right: 80px;
+  bottom: var(--space-xl);
+  left: calc(var(--space-xl) + 84px);
   width: 48px;
   height: 48px;
   border-radius: 50%;
@@ -3787,6 +3787,7 @@ body {
   backdrop-filter: blur(12px);
   z-index: 100;
 }
+
 
 .theme-button:hover {
   background: var(--void-elevated);
@@ -4236,8 +4237,8 @@ body {
   }
 
   .theme-button {
-    right: 70px;
-    bottom: var(--space-md);
+    left: calc(var(--space-lg) + 72px);
+    bottom: var(--space-lg);
     width: 44px;
     height: 44px;
   }
@@ -4246,4 +4247,5 @@ body {
     width: 50px;
     height: 50px;
   }
+
 }
