@@ -16,7 +16,8 @@ import { ThemeButton } from './components/ThemeButton';
 import { OnboardingTour } from './components/OnboardingTour';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { useAuth } from './components/AuthContext';
-import { SocialButton, SocialHub } from './components/social';
+import { SocialButton, SocialHub, UsernameSetup } from './components/social';
+import { useSocialStore } from './store/socialStore';
 import './App.css';
 
 function App() {
@@ -24,6 +25,7 @@ function App() {
   const [isSettingsOpen, setSettingsOpen] = useState(false);
   const [isThemeSelectorOpen, setThemeSelectorOpen] = useState(false);
   const [isSocialHubOpen, setSocialHubOpen] = useState(false);
+  const { usernameSetupOpen, setUsernameSetupOpen, username } = useSocialStore();
 
   // Handler for viewing another user's globe
   const handleViewGlobe = (username: string) => {
@@ -105,6 +107,14 @@ function App() {
         onClose={() => setSocialHubOpen(false)}
         onViewGlobe={handleViewGlobe}
         onFlightAdded={handleFlightAdded}
+      />
+
+      {/* Username Setup Modal (standalone for Settings access) */}
+      <UsernameSetup
+        isOpen={usernameSetupOpen}
+        onComplete={() => setUsernameSetupOpen(false)}
+        onClose={() => setUsernameSetupOpen(false)}
+        allowClose={!!username}
       />
 
       {/* Theme Selector */}

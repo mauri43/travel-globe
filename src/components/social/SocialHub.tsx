@@ -7,7 +7,6 @@ import { FollowersTab } from './FollowersTab';
 import { SearchTab } from './SearchTab';
 import { SharedFlightsTab } from './SharedFlightsTab';
 import { NotificationsTab } from './NotificationsTab';
-import { UsernameSetup } from './UsernameSetup';
 
 interface SocialHubProps {
   isOpen: boolean;
@@ -32,7 +31,6 @@ export function SocialHub({ isOpen, onClose, onViewGlobe, onFlightAdded }: Socia
     pendingRequests,
     pendingSharedFlights,
     username,
-    usernameSetupOpen,
     setUsernameSetupOpen,
     refreshUnreadCount,
     loadFriends,
@@ -52,10 +50,6 @@ export function SocialHub({ isOpen, onClose, onViewGlobe, onFlightAdded }: Socia
       setUsernameSetupOpen(true);
     }
   }, [isOpen, username, setUsernameSetupOpen]);
-
-  const handleUsernameComplete = () => {
-    setUsernameSetupOpen(false);
-  };
 
   const getBadgeCount = (tabId: SocialTab): number => {
     switch (tabId) {
@@ -94,17 +88,9 @@ export function SocialHub({ isOpen, onClose, onViewGlobe, onFlightAdded }: Socia
 
   return (
     <>
-      {/* Username Setup Modal */}
-      <UsernameSetup
-        isOpen={usernameSetupOpen}
-        onComplete={handleUsernameComplete}
-        onClose={() => setUsernameSetupOpen(false)}
-        allowClose={!!username}
-      />
-
       {/* Main Social Hub */}
       <AnimatePresence>
-        {isOpen && !usernameSetupOpen && (
+        {isOpen && (
           <>
             {/* Backdrop */}
             <motion.div

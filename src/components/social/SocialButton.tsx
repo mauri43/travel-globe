@@ -25,10 +25,10 @@ export function SocialButton({ onClick }: SocialButtonProps) {
       whileTap={{ scale: 0.95 }}
       style={{
         position: 'fixed',
-        left: 'calc(var(--space-xl, 24px) + 168px)',
+        left: 'calc(var(--space-xl, 24px) + 228px)',
         bottom: 'var(--space-xl, 24px)',
-        width: '56px',
-        height: '56px',
+        width: '48px',
+        height: '48px',
         borderRadius: '50%',
         backgroundColor: 'rgba(26, 26, 46, 0.9)',
         border: '1px solid rgba(255, 255, 255, 0.15)',
@@ -36,9 +36,9 @@ export function SocialButton({ onClick }: SocialButtonProps) {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        fontSize: '24px',
+        fontSize: '20px',
         boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
-        zIndex: 30,
+        zIndex: 100,
       }}
     >
       👥
