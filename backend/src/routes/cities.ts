@@ -172,6 +172,78 @@ router.put('/:id', requireAuth, async (req: AuthRequest, res: Response) => {
   }
 });
 
+// Bulk create cities (for CSV import)
+router.post('/bulk', requireAuth, async (req: AuthRequest, res: Response) => {
+  try {
+    const { cities } = req.body;
+
+    if (!Array.isArray(cities) || cities.length === 0) {
+      return res.status(400).json({ error: 'Cities array is required' });
+    }
+
+    const now = new Date().toISOString();
+    const createdCities: City[] = [];
+    const batch = db().batch();
+
+    for (const city of cities) {
+      const {
+        name,
+        country,
+        lat,
+        lng,
+        flewFromName,
+        flewFromLat,
+        flewFromLng,
+        isOneWay,
+        tripName,
+        dates,
+        photos,
+        videos,
+        memories,
+        tags,
+      } = city;
+
+      // Validate required fields
+      if (!name || lat === undefined || lng === undefined) {
+        continue; // Skip invalid entries
+      }
+
+      const cityData: Omit<City, 'id'> = {
+        userId: req.user!.uid,
+        name,
+        country: country || '',
+        lat,
+        lng,
+        flewFromName,
+        flewFromLat,
+        flewFromLng,
+        isOneWay: isOneWay || false,
+        tripName: tripName || '',
+        dates: dates || [],
+        photos: photos || [],
+        videos: videos || [],
+        memories: memories || '',
+        tags: tags || [],
+        status: 'complete',
+        source: 'manual',
+        createdAt: now,
+        updatedAt: now,
+      };
+
+      const docRef = db().collection('cities').doc();
+      batch.set(docRef, cityData);
+      createdCities.push({ id: docRef.id, ...cityData });
+    }
+
+    await batch.commit();
+
+    res.status(201).json(createdCities);
+  } catch (error) {
+    console.error('Error bulk creating cities:', error);
+    res.status(500).json({ error: 'Failed to create cities' });
+  }
+});
+
 // Delete all cities for the authenticated user
 router.delete('/', requireAuth, async (req: AuthRequest, res: Response) => {
   try {
