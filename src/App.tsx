@@ -14,13 +14,29 @@ import { ThemeSelector } from './components/ThemeSelector';
 import { ThemeUnlockCelebration } from './components/ThemeUnlockCelebration';
 import { ThemeButton } from './components/ThemeButton';
 import { OnboardingTour } from './components/OnboardingTour';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { useAuth } from './components/AuthContext';
+import { SocialButton, SocialHub } from './components/social';
 import './App.css';
 
 function App() {
   const { user, loading } = useAuth();
   const [isSettingsOpen, setSettingsOpen] = useState(false);
   const [isThemeSelectorOpen, setThemeSelectorOpen] = useState(false);
+  const [isSocialHubOpen, setSocialHubOpen] = useState(false);
+
+  // Handler for viewing another user's globe
+  const handleViewGlobe = (username: string) => {
+    // TODO: Implement public globe viewing
+    console.log('View globe for:', username);
+    setSocialHubOpen(false);
+  };
+
+  // Handler for when a shared flight is added to the user's globe
+  const handleFlightAdded = (cityId: string) => {
+    // TODO: Trigger globe refresh and possibly focus on the new city
+    console.log('Flight added:', cityId);
+  };
 
   // Show loading state while checking auth
   if (loading) {
@@ -49,8 +65,21 @@ function App() {
       {/* Header */}
       <Header />
 
-      {/* 3D Globe Scene */}
-      <Scene />
+      {/* 3D Globe Scene - wrapped in ErrorBoundary */}
+      <ErrorBoundary
+        fallback={
+          <div className="canvas-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ color: '#fff', textAlign: 'center' }}>
+              <p>Globe rendering error</p>
+              <button onClick={() => window.location.reload()} style={{ marginTop: '1rem', padding: '0.5rem 1rem', cursor: 'pointer' }}>
+                Reload Page
+              </button>
+            </div>
+          </div>
+        }
+      >
+        <Scene />
+      </ErrorBoundary>
 
       {/* Add Button */}
       <AddButton />
@@ -66,6 +95,17 @@ function App() {
 
       {/* Settings Button */}
       <SettingsButton onClick={() => setSettingsOpen(true)} />
+
+      {/* Social Button */}
+      <SocialButton onClick={() => setSocialHubOpen(true)} />
+
+      {/* Social Hub */}
+      <SocialHub
+        isOpen={isSocialHubOpen}
+        onClose={() => setSocialHubOpen(false)}
+        onViewGlobe={handleViewGlobe}
+        onFlightAdded={handleFlightAdded}
+      />
 
       {/* Theme Selector */}
       <ThemeSelector isOpen={isThemeSelectorOpen} onClose={() => setThemeSelectorOpen(false)} />

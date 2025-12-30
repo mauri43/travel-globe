@@ -1,14 +1,17 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '../store';
+import { ShareFlightModal } from './social';
 
 export function MemoryModal() {
   const { selectedCity, setSelectedCity, setAdminOpen, setEditingCity } = useStore();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [isShareModalOpen, setShareModalOpen] = useState(false);
 
   // Reset image index when city changes
   useEffect(() => {
     setCurrentImageIndex(0);
+    setShareModalOpen(false);
   }, [selectedCity]);
 
   if (!selectedCity) return null;
@@ -77,12 +80,25 @@ export function MemoryModal() {
             </svg>
           </button>
 
+          {/* Share button */}
+          <button className="modal-share" onClick={() => setShareModalOpen(true)}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="18" cy="5" r="3" />
+              <circle cx="6" cy="12" r="3" />
+              <circle cx="18" cy="19" r="3" />
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+            </svg>
+          </button>
+
           {/* Header */}
           <div className="modal-header">
             <h1 className="city-title">{selectedCity.name}</h1>
             <p className="city-country-large">{selectedCity.country}</p>
             <div className="visit-dates">
-              {selectedCity.dates.length === 1 ? (
+              {selectedCity.dates.length === 0 ? (
+                <span>No date recorded</span>
+              ) : selectedCity.dates.length === 1 ? (
                 <span>{formatDate(selectedCity.dates[0])}</span>
               ) : (
                 <span>
@@ -179,6 +195,14 @@ export function MemoryModal() {
           )}
         </motion.div>
       </motion.div>
+
+      {/* Share Flight Modal */}
+      <ShareFlightModal
+        isOpen={isShareModalOpen}
+        onClose={() => setShareModalOpen(false)}
+        cityId={selectedCity.id}
+        cityName={selectedCity.name}
+      />
     </AnimatePresence>
   );
 }

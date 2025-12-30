@@ -1,7 +1,7 @@
 // Globe Theme Configuration
-// Progressive unlock system - themes unlock as users visit more countries
+// Progressive unlock system - themes unlock as users visit more places
 
-export type ThemeTierId = 'starter' | 'bronze' | 'silver' | 'gold' | 'platinum';
+export type ThemeTierId = 'starter' | 'bronze' | 'sapphire' | 'gold' | 'obsidian' | 'celestial';
 
 export interface ThemeColors {
   // Globe shaders (hex numbers for Three.js)
@@ -27,9 +27,11 @@ export interface ThemeColors {
 }
 
 export interface ThemeFeatures {
-  animatedGlow?: boolean;       // Silver: aurora color cycling
-  holographicShader?: boolean;  // Gold: prismatic effects
-  particleTrails?: boolean;     // Platinum: flight path particles
+  animatedGlow?: boolean;       // Animated color cycling
+  holographicShader?: boolean;  // Prismatic effects
+  particleTrails?: boolean;     // Flight path particles
+  volcanicCracks?: boolean;     // Obsidian: lava crack effect
+  nebulaEffect?: boolean;       // Celestial: cosmic nebula
 }
 
 export interface ThemeAnimation {
@@ -75,7 +77,7 @@ export const THEMES: Record<ThemeTierId, ThemeConfig> = {
     name: 'Bronze Explorer',
     displayName: 'Bronze Explorer',
     description: 'Warm golden tones for the adventurous',
-    requiredCountries: 5,
+    requiredCountries: 10,
     colors: {
       glowColor: 0xffa500,
       oceanColor: 0x1a3a4a,
@@ -91,31 +93,31 @@ export const THEMES: Record<ThemeTierId, ThemeConfig> = {
     },
   },
 
-  silver: {
-    id: 'silver',
-    name: 'Silver Voyager',
-    displayName: 'Silver Voyager',
-    description: 'Aurora borealis with animated color cycling',
-    requiredCountries: 15,
+  sapphire: {
+    id: 'sapphire',
+    name: 'Sapphire Sailor',
+    displayName: 'Sapphire Sailor',
+    description: 'Deep royal blues with moonlit ocean shimmer',
+    requiredCountries: 25,
     colors: {
-      glowColor: 0x00ff88,
-      oceanColor: 0x0a2030,
-      landColor: 0x050808,
-      borderColor: '#88ffcc',
-      flightPathColor: '#66ffaa',
-      usMarkerColor: '#40e0d0',
-      usMarkerHoverColor: '#7fffd4',
-      intlMarkerColor: '#98fb98',
-      intlMarkerHoverColor: '#adff2f',
-      accentLightColor: '#00ff88',
-      starSaturation: 0.2,
+      glowColor: 0x1e90ff,
+      oceanColor: 0x0a1628,
+      landColor: 0x050510,
+      borderColor: '#4169e1',
+      flightPathColor: '#87ceeb',
+      usMarkerColor: '#4169e1',
+      usMarkerHoverColor: '#6495ed',
+      intlMarkerColor: '#c0c0c0',
+      intlMarkerHoverColor: '#e8e8e8',
+      accentLightColor: '#1e90ff',
+      starSaturation: 0.25,
     },
     features: {
       animatedGlow: true,
     },
     animation: {
-      glowCycleSpeed: 0.5,
-      colorPalette: [0x00ff88, 0x00ffff, 0x88ff00, 0xff00ff, 0x00ff88],
+      glowCycleSpeed: 0.4,
+      colorPalette: [0x1e90ff, 0x4169e1, 0x6495ed, 0x87ceeb, 0x1e90ff],
     },
   },
 
@@ -132,9 +134,9 @@ export const THEMES: Record<ThemeTierId, ThemeConfig> = {
       borderColor: '#ffd700',
       flightPathColor: '#ffec8b',
       usMarkerColor: '#ffd700',
-      usMarkerHoverColor: '#ffec8b',
-      intlMarkerColor: '#ff69b4',
-      intlMarkerHoverColor: '#ff1493',
+      usMarkerHoverColor: '#fff8dc',
+      intlMarkerColor: '#ff1493',
+      intlMarkerHoverColor: '#ff69b4',
       accentLightColor: '#ffd700',
       starSaturation: 0.3,
     },
@@ -148,38 +150,69 @@ export const THEMES: Record<ThemeTierId, ThemeConfig> = {
     },
   },
 
-  platinum: {
-    id: 'platinum',
-    name: 'Platinum Nomad',
-    displayName: 'Platinum Nomad',
-    description: 'Particle trails on flights, ultimate prestige',
+  obsidian: {
+    id: 'obsidian',
+    name: 'Obsidian Odyssey',
+    displayName: 'Obsidian Odyssey',
+    description: 'Volcanic black globe with ember lava cracks',
     requiredCountries: 50,
     colors: {
-      glowColor: 0xe5e4e2,
-      oceanColor: 0x0f0f1a,
-      landColor: 0x050505,
-      borderColor: '#e5e4e2',
-      flightPathColor: '#c0c0c0',
-      usMarkerColor: '#c0c0c0',
-      usMarkerHoverColor: '#e5e4e2',
-      intlMarkerColor: '#dda0dd',
-      intlMarkerHoverColor: '#ee82ee',
-      accentLightColor: '#e5e4e2',
+      glowColor: 0xff4500,
+      oceanColor: 0x0a0505,
+      landColor: 0x020202,
+      borderColor: '#ff4500',
+      flightPathColor: '#ff6347',
+      usMarkerColor: '#ff4500',
+      usMarkerHoverColor: '#ff6347',
+      intlMarkerColor: '#ffa500',
+      intlMarkerHoverColor: '#ffd700',
+      accentLightColor: '#ff4500',
       starSaturation: 0.1,
     },
     features: {
       animatedGlow: true,
       holographicShader: true,
-      particleTrails: true,
+      volcanicCracks: true,
     },
     animation: {
       glowCycleSpeed: 0.2,
-      colorPalette: [0xe5e4e2, 0xdda0dd, 0x87ceeb, 0xfafad2, 0xe5e4e2],
+      colorPalette: [0xff4500, 0xff6347, 0xff8c00, 0xdc143c, 0xff4500],
+    },
+  },
+
+  celestial: {
+    id: 'celestial',
+    name: 'Celestial Champion',
+    displayName: 'Celestial Champion',
+    description: 'Galaxy nebula with cosmic dust and stars',
+    requiredCountries: 100,
+    colors: {
+      glowColor: 0x9400d3,
+      oceanColor: 0x0d0520,
+      landColor: 0x030308,
+      borderColor: '#9400d3',
+      flightPathColor: '#da70d6',
+      usMarkerColor: '#9370db',
+      usMarkerHoverColor: '#ba55d3',
+      intlMarkerColor: '#ff69b4',
+      intlMarkerHoverColor: '#ff1493',
+      accentLightColor: '#9400d3',
+      starSaturation: 0.5,
+    },
+    features: {
+      animatedGlow: true,
+      holographicShader: true,
+      particleTrails: true,
+      nebulaEffect: true,
+    },
+    animation: {
+      glowCycleSpeed: 0.15,
+      colorPalette: [0x9400d3, 0xff69b4, 0x00bfff, 0x8a2be2, 0x9400d3],
     },
   },
 };
 
-export const THEME_ORDER: ThemeTierId[] = ['starter', 'bronze', 'silver', 'gold', 'platinum'];
+export const THEME_ORDER: ThemeTierId[] = ['starter', 'bronze', 'sapphire', 'gold', 'obsidian', 'celestial'];
 
 // Helper to get theme by country count
 export function getUnlockedThemes(countryCount: number): ThemeTierId[] {

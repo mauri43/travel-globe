@@ -1,24 +1,53 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../hooks/useTheme';
 import type { ThemeTierId, ThemeConfig } from '../config/themes';
 
+const CELEBRATED_THEMES_KEY = 'travel-globe-celebrated-themes';
+
+// Get celebrated themes from localStorage
+const getCelebratedThemes = (): ThemeTierId[] => {
+  try {
+    const stored = localStorage.getItem(CELEBRATED_THEMES_KEY);
+    return stored ? JSON.parse(stored) : ['starter']; // starter is always "celebrated"
+  } catch {
+    return ['starter'];
+  }
+};
+
+// Save celebrated theme to localStorage
+const markThemeAsCelebrated = (themeId: ThemeTierId) => {
+  try {
+    const celebrated = getCelebratedThemes();
+    if (!celebrated.includes(themeId)) {
+      celebrated.push(themeId);
+      localStorage.setItem(CELEBRATED_THEMES_KEY, JSON.stringify(celebrated));
+    }
+  } catch {
+    // Ignore localStorage errors
+  }
+};
+
 export function ThemeUnlockCelebration() {
   const { unlockedThemes, allThemes } = useTheme();
   const [celebratingTheme, setCelebratingTheme] = useState<ThemeConfig | null>(null);
-  const previousUnlockedRef = useRef<ThemeTierId[]>([]);
 
   useEffect(() => {
-    // Check for newly unlocked themes
-    const previousUnlocked = previousUnlockedRef.current;
-    const newlyUnlocked = unlockedThemes.filter(
-      (themeId) => !previousUnlocked.includes(themeId) && themeId !== 'starter'
+    // Get themes we've already shown celebrations for
+    const celebratedThemes = getCelebratedThemes();
+
+    // Find themes that are unlocked but haven't been celebrated yet
+    const uncelebratedThemes = unlockedThemes.filter(
+      (themeId) => !celebratedThemes.includes(themeId)
     );
 
-    if (newlyUnlocked.length > 0 && previousUnlocked.length > 0) {
-      // Celebrate the first newly unlocked theme
-      const themeToShow = allThemes[newlyUnlocked[0]];
+    if (uncelebratedThemes.length > 0) {
+      // Celebrate the first uncelebrated theme
+      const themeToShow = allThemes[uncelebratedThemes[0]];
       setCelebratingTheme(themeToShow);
+
+      // Mark it as celebrated
+      markThemeAsCelebrated(uncelebratedThemes[0]);
 
       // Auto-dismiss after 5 seconds
       const timer = setTimeout(() => {
@@ -27,8 +56,6 @@ export function ThemeUnlockCelebration() {
 
       return () => clearTimeout(timer);
     }
-
-    previousUnlockedRef.current = unlockedThemes;
   }, [unlockedThemes, allThemes]);
 
   const handleDismiss = () => {

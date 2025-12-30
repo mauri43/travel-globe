@@ -65,6 +65,10 @@ const COMMON_AIRPORTS: Record<string, AirportInfo> = {
   OGG: { code: 'OGG', name: 'Kahului Airport', city: 'Maui', country: 'United States', lat: 20.8986, lng: -156.4305 },
   JAX: { code: 'JAX', name: 'Jacksonville International', city: 'Jacksonville', country: 'United States', lat: 30.4941, lng: -81.6879 },
   ABQ: { code: 'ABQ', name: 'Albuquerque International', city: 'Albuquerque', country: 'United States', lat: 35.0402, lng: -106.6094 },
+  SAV: { code: 'SAV', name: 'Savannah/Hilton Head International', city: 'Savannah', country: 'United States', lat: 32.1276, lng: -81.2021 },
+  LEX: { code: 'LEX', name: 'Blue Grass Airport', city: 'Lexington', country: 'United States', lat: 38.0365, lng: -84.6059 },
+  GNV: { code: 'GNV', name: 'Gainesville Regional Airport', city: 'Gainesville', country: 'United States', lat: 29.6900, lng: -82.2718 },
+  CLL: { code: 'CLL', name: 'Easterwood Field', city: 'College Station', country: 'United States', lat: 30.5886, lng: -96.3638 },
 
   // Europe
   LHR: { code: 'LHR', name: 'London Heathrow', city: 'London', country: 'United Kingdom', lat: 51.47, lng: -0.4543 },
@@ -93,6 +97,13 @@ const COMMON_AIRPORTS: Record<string, AirportInfo> = {
   MXP: { code: 'MXP', name: 'Milan Malpensa', city: 'Milan', country: 'Italy', lat: 45.63, lng: 8.7231 },
   EDI: { code: 'EDI', name: 'Edinburgh Airport', city: 'Edinburgh', country: 'United Kingdom', lat: 55.95, lng: -3.3725 },
   MAN: { code: 'MAN', name: 'Manchester Airport', city: 'Manchester', country: 'United Kingdom', lat: 53.3537, lng: -2.275 },
+  AGP: { code: 'AGP', name: 'Málaga-Costa del Sol Airport', city: 'Málaga', country: 'Spain', lat: 36.6749, lng: -4.4991 },
+  OPO: { code: 'OPO', name: 'Francisco Sá Carneiro Airport', city: 'Porto', country: 'Portugal', lat: 41.2481, lng: -8.6814 },
+  BVA: { code: 'BVA', name: 'Paris Beauvais-Tillé Airport', city: 'Beauvais', country: 'France', lat: 49.4544, lng: 2.1128 },
+  MRS: { code: 'MRS', name: 'Marseille Provence Airport', city: 'Marseille', country: 'France', lat: 43.4393, lng: 5.2214 },
+
+  // Africa
+  RAK: { code: 'RAK', name: 'Marrakech Menara Airport', city: 'Marrakech', country: 'Morocco', lat: 31.6069, lng: -8.0363 },
 
   // Asia
   NRT: { code: 'NRT', name: 'Narita International', city: 'Tokyo', country: 'Japan', lat: 35.7653, lng: 140.3864 },
@@ -136,6 +147,8 @@ const COMMON_AIRPORTS: Record<string, AirportInfo> = {
   LIM: { code: 'LIM', name: 'Jorge Chávez International', city: 'Lima', country: 'Peru', lat: -12.0219, lng: -77.1143 },
   PTY: { code: 'PTY', name: 'Tocumen International', city: 'Panama City', country: 'Panama', lat: 9.0714, lng: -79.3835 },
   SJO: { code: 'SJO', name: 'Juan Santamaría International', city: 'San José', country: 'Costa Rica', lat: 9.9939, lng: -84.2088 },
+  CCS: { code: 'CCS', name: 'Simón Bolívar International', city: 'Caracas', country: 'Venezuela', lat: 10.6012, lng: -66.9912 },
+  GUA: { code: 'GUA', name: 'La Aurora International', city: 'Guatemala City', country: 'Guatemala', lat: 14.5833, lng: -90.5275 },
 
   // Africa & Middle East
   JNB: { code: 'JNB', name: 'O.R. Tambo International', city: 'Johannesburg', country: 'South Africa', lat: -26.1392, lng: 28.246 },

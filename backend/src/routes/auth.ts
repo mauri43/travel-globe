@@ -15,6 +15,13 @@ router.get('/me', requireAuth, async (req: AuthRequest, res: Response) => {
         email: req.user!.email,
         trustedEmails: [req.user!.email],
         createdAt: new Date().toISOString(),
+        // Social fields with defaults
+        profileVisibility: 'private',
+        flightTagDefault: 'approve_required',
+        friendCount: 0,
+        followerCount: 0,
+        followingCount: 0,
+        unreadNotificationCount: 0,
       };
       await db().collection('users').doc(req.user!.uid).set(userData);
       return res.json(userData);
@@ -111,14 +118,60 @@ router.delete('/account', requireAuth, async (req: AuthRequest, res: Response) =
   try {
     const userId = req.user!.uid;
 
+    // Get user data to find username
+    const userDoc = await db().collection('users').doc(userId).get();
+    const userData = userDoc.data();
+    const username = userData?.username?.toLowerCase();
+
+    const batch = db().batch();
+
     // Delete all user's cities
     const citiesSnapshot = await db()
       .collection('cities')
       .where('userId', '==', userId)
       .get();
-
-    const batch = db().batch();
     citiesSnapshot.docs.forEach((doc) => {
+      batch.delete(doc.ref);
+    });
+
+    // Delete username reservation
+    if (username) {
+      batch.delete(db().collection('usernames').doc(username));
+    }
+
+    // Delete friendships (user is participant)
+    const friendshipsSnapshot = await db()
+      .collection('friendships')
+      .where('userIds', 'array-contains', userId)
+      .get();
+    friendshipsSnapshot.docs.forEach((doc) => {
+      batch.delete(doc.ref);
+    });
+
+    // Delete follows where user is follower
+    const followingSnapshot = await db()
+      .collection('follows')
+      .where('followerUid', '==', userId)
+      .get();
+    followingSnapshot.docs.forEach((doc) => {
+      batch.delete(doc.ref);
+    });
+
+    // Delete follows where user is followed
+    const followersSnapshot = await db()
+      .collection('follows')
+      .where('followedUid', '==', userId)
+      .get();
+    followersSnapshot.docs.forEach((doc) => {
+      batch.delete(doc.ref);
+    });
+
+    // Delete notifications
+    const notificationsSnapshot = await db()
+      .collection('notifications')
+      .where('recipientUid', '==', userId)
+      .get();
+    notificationsSnapshot.docs.forEach((doc) => {
       batch.delete(doc.ref);
     });
 

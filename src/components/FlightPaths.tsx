@@ -234,7 +234,7 @@ function FlightPath({ from, to, globeRadius, index }: FlightPathProps) {
 
       {/* Animated plane sprite */}
 
-      {/* Particle trail for Platinum tier */}
+      {/* Particle trail for Celestial tier */}
       {currentTheme.features?.particleTrails && isVisible && (
         <FlightParticleTrail
           path={pathPoints}

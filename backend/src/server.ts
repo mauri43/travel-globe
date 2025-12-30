@@ -5,6 +5,7 @@ import { initializeFirebase } from './config/firebase';
 import authRoutes from './routes/auth';
 import citiesRoutes from './routes/cities';
 import emailRoutes from './routes/email';
+import socialRoutes from './routes/social';
 
 // Load environment variables
 dotenv.config();
@@ -49,6 +50,7 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/cities', citiesRoutes);
 app.use('/api/email', emailRoutes);
+app.use('/api/social', socialRoutes);
 
 // Error handling middleware
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {

@@ -6,6 +6,8 @@ import { SwipeToConfirm } from './SwipeToConfirm';
 import { lookupAirport, isValidAirportCode } from '../utils/airportLookup';
 import type { City } from '../types';
 import { useStore } from '../store';
+import { useSocialStore } from '../store/socialStore';
+import type { FlightTagPermission, ProfileVisibility } from '../types/social';
 
 // Google Places API key
 const GOOGLE_PLACES_API_KEY = 'AIzaSyB9TQe9WP_CBsVtJ6Z7WxjaygP8B1yxwTY';
@@ -81,6 +83,17 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
   // Clear all flights state
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
+
+  // Social settings state
+  const {
+    username,
+    profileVisibility,
+    flightTagDefault,
+    setUsernameSetupOpen,
+    updateProfileVisibility,
+    updateFlightTagDefault,
+  } = useSocialStore();
+  const [isSavingSocial, setIsSavingSocial] = useState(false);
 
   // Default from city state
   const [defaultFromCity, setDefaultFromCity] = useState<DefaultFromCity>(DEFAULT_FROM_CITY);
@@ -264,11 +277,24 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
 
       // Parse header row
       const headers = parseCSVLine(lines[0]).map(h => h.toLowerCase().trim());
-      const originIdx = headers.findIndex(h => h.includes('origin') || h.includes('from') || h === 'departure');
-      const destIdx = headers.findIndex(h => h.includes('dest') || h.includes('to') || h === 'arrival');
-      const fromDateIdx = headers.findIndex(h => h.includes('from date') || h.includes('start') || h === 'departure date');
-      const toDateIdx = headers.findIndex(h => h.includes('to date') || h.includes('end') || h === 'arrival date' || h === 'return');
-      const tripIdx = headers.findIndex(h => h.includes('trip') || h.includes('name'));
+
+      // Find date columns first (more specific patterns)
+      const fromDateIdx = headers.findIndex(h =>
+        h.includes('from date') || h.includes('depart') || h.includes('start date') || h === 'start'
+      );
+      const toDateIdx = headers.findIndex(h =>
+        h.includes('to date') || h.includes('return') || h.includes('end date') || h === 'end' || h.includes('arrival date')
+      );
+
+      // Find airport columns (avoid matching date columns)
+      const originIdx = headers.findIndex(h =>
+        h.includes('origin') || (h === 'from' && !h.includes('date')) || h === 'departure airport' || h === 'from airport'
+      );
+      const destIdx = headers.findIndex(h =>
+        h.includes('dest') || (h === 'to' && !h.includes('date')) || h === 'arrival airport' || h === 'to airport'
+      );
+
+      const tripIdx = headers.findIndex(h => h.includes('trip') || h === 'name');
       const tagsIdx = headers.findIndex(h => h.includes('tag'));
 
       if (originIdx === -1 || destIdx === -1) {
@@ -279,7 +305,42 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
 
       const errors: string[] = [];
       const citiesToAdd: Omit<City, 'id'>[] = [];
+      const skippedDuplicates: number[] = [];
       const dataLines = lines.slice(1);
+
+      // Helper to check if a flight already exists
+      const isDuplicateFlight = (
+        originLat: number,
+        originLng: number,
+        destLat: number,
+        destLng: number,
+        dates: string[]
+      ): boolean => {
+        return cities.some(existingCity => {
+          // Check destination coordinates (within ~1km tolerance)
+          const destMatch =
+            Math.abs(existingCity.coordinates.lat - destLat) < 0.01 &&
+            Math.abs(existingCity.coordinates.lng - destLng) < 0.01;
+
+          if (!destMatch) return false;
+
+          // Check origin coordinates
+          const originMatch = existingCity.flewFrom &&
+            Math.abs(existingCity.flewFrom.coordinates.lat - originLat) < 0.01 &&
+            Math.abs(existingCity.flewFrom.coordinates.lng - originLng) < 0.01;
+
+          if (!originMatch) return false;
+
+          // Check dates (if both have dates, they should match)
+          if (dates.length > 0 && existingCity.dates.length > 0) {
+            // Check if the first date matches (departure date)
+            return dates[0] === existingCity.dates[0];
+          }
+
+          // If no dates to compare, consider it a duplicate based on origin/dest alone
+          return dates.length === 0 && existingCity.dates.length === 0;
+        });
+      };
 
       for (let i = 0; i < dataLines.length; i++) {
         const line = dataLines[i];
@@ -342,6 +403,21 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
           tags.push(...values[tagsIdx].split(',').map(t => t.trim()).filter(Boolean));
         }
 
+        // Build dates array for duplicate check
+        const flightDates = fromDate && toDate ? [fromDate, toDate] : fromDate ? [fromDate] : [];
+
+        // Check for duplicate flight
+        if (isDuplicateFlight(
+          originAirport.lat,
+          originAirport.lng,
+          destAirport.lat,
+          destAirport.lng,
+          flightDates
+        )) {
+          skippedDuplicates.push(i + 2);
+          continue;
+        }
+
         const city: Omit<City, 'id'> = {
           name: destAirport.city,
           country: destAirport.country,
@@ -367,7 +443,13 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
       if (citiesToAdd.length > 0) {
         setImportProgress(`Adding ${citiesToAdd.length} flights...`);
         await bulkAddCities(citiesToAdd);
-        setImportSuccess(`Successfully imported ${citiesToAdd.length} flight${citiesToAdd.length > 1 ? 's' : ''}`);
+        let successMsg = `Successfully imported ${citiesToAdd.length} flight${citiesToAdd.length > 1 ? 's' : ''}`;
+        if (skippedDuplicates.length > 0) {
+          successMsg += ` (${skippedDuplicates.length} duplicate${skippedDuplicates.length > 1 ? 's' : ''} skipped)`;
+        }
+        setImportSuccess(successMsg);
+      } else if (skippedDuplicates.length > 0 && errors.length === 0) {
+        setImportSuccess(`All ${skippedDuplicates.length} flight${skippedDuplicates.length > 1 ? 's' : ''} already exist - no duplicates imported`);
       }
 
       if (errors.length > 0) {
@@ -415,18 +497,50 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
     return dateStr;
   };
 
+  // Social settings handlers
+  const handleVisibilityChange = async (visibility: ProfileVisibility) => {
+    setIsSavingSocial(true);
+    try {
+      await updateProfileVisibility(visibility);
+    } catch (err) {
+      console.error('Failed to update visibility:', err);
+    } finally {
+      setIsSavingSocial(false);
+    }
+  };
+
+  const handleFlightTagDefaultChange = async (permission: FlightTagPermission) => {
+    setIsSavingSocial(true);
+    try {
+      await updateFlightTagDefault(permission);
+    } catch (err) {
+      console.error('Failed to update flight tag default:', err);
+    } finally {
+      setIsSavingSocial(false);
+    }
+  };
+
   // Clear all flights handler
   const handleClearAllFlights = async () => {
     setIsClearing(true);
     try {
-      await clearAllCities();
+      // Close the panel FIRST
       setShowClearConfirm(false);
-      setSuccessMessage('All flights have been deleted');
-      setTimeout(() => setSuccessMessage(''), 3000);
+      onClose();
+
+      // Wait for animation to complete
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      // Clear the cities
+      await clearAllCities();
+      
+      // Reload the page to ensure clean WebGL state
+      window.location.reload();
     } catch (err: any) {
-      setError(err.message || 'Failed to delete flights');
-    } finally {
+      console.error('Failed to delete flights:', err);
+      setError(String(err?.message || 'Failed to delete flights'));
       setIsClearing(false);
+      setShowClearConfirm(false);
     }
   };
 
@@ -481,6 +595,81 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                     </svg>
                     Take Tour
                   </button>
+                </div>
+              </div>
+
+              {/* Social Settings Section */}
+              <div className="settings-section">
+                <h3>Social</h3>
+
+                {/* Username */}
+                <div className="social-setting-row">
+                  <div className="social-setting-label">
+                    <span className="label">Username</span>
+                    {username ? (
+                      <span className="value">@{username}</span>
+                    ) : (
+                      <span className="value not-set">Not set</span>
+                    )}
+                  </div>
+                  <button
+                    className="social-setting-btn"
+                    onClick={() => setUsernameSetupOpen(true)}
+                  >
+                    {username ? 'Change' : 'Set Up'}
+                  </button>
+                </div>
+
+                {/* Profile Visibility */}
+                <div className="social-setting-row">
+                  <div className="social-setting-label">
+                    <span className="label">Profile Visibility</span>
+                    <span className="description">
+                      {profileVisibility === 'public'
+                        ? 'Anyone can follow you and see your flight paths'
+                        : 'Only friends can see your flights'}
+                    </span>
+                  </div>
+                  <div className="social-toggle-buttons">
+                    <button
+                      className={`toggle-btn ${profileVisibility === 'public' ? 'active' : ''}`}
+                      onClick={() => handleVisibilityChange('public')}
+                      disabled={isSavingSocial}
+                    >
+                      Public
+                    </button>
+                    <button
+                      className={`toggle-btn ${profileVisibility === 'private' ? 'active' : ''}`}
+                      onClick={() => handleVisibilityChange('private')}
+                      disabled={isSavingSocial}
+                    >
+                      Private
+                    </button>
+                  </div>
+                </div>
+
+                {/* Flight Sharing Default */}
+                <div className="social-setting-row">
+                  <div className="social-setting-label">
+                    <span className="label">When Friends Share Flights</span>
+                    <span className="description">
+                      {flightTagDefault === 'approve_required'
+                        ? 'You must approve each shared flight'
+                        : flightTagDefault === 'auto_approve'
+                        ? 'Automatically accept shared flights'
+                        : 'Automatically decline shared flights'}
+                    </span>
+                  </div>
+                  <select
+                    className="social-select"
+                    value={flightTagDefault}
+                    onChange={(e) => handleFlightTagDefaultChange(e.target.value as FlightTagPermission)}
+                    disabled={isSavingSocial}
+                  >
+                    <option value="approve_required">Ask me each time</option>
+                    <option value="auto_approve">Auto-accept</option>
+                    <option value="auto_deny">Auto-decline</option>
+                  </select>
                 </div>
               </div>
 

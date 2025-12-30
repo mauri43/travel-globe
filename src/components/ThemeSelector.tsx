@@ -35,6 +35,8 @@ function FeatureBadge({ feature }: { feature: string }) {
     animatedGlow: { icon: '✨', label: 'Aurora' },
     holographicShader: { icon: '🌈', label: 'Holographic' },
     particleTrails: { icon: '💫', label: 'Particles' },
+    volcanicCracks: { icon: '🌋', label: 'Volcanic' },
+    nebulaEffect: { icon: '🌌', label: 'Nebula' },
   };
 
   const badge = badges[feature];
