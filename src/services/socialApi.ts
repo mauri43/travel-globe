@@ -4,7 +4,6 @@ import type {
   FriendWithProfile,
   FriendRequest,
   SentFriendRequest,
-  PublicFlight,
   SharedFlightPending,
   FlightContribution,
   Notification,

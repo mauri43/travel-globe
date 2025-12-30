@@ -90,7 +90,7 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
     profileVisibility,
     flightTagDefault,
     setUsernameSetupOpen,
-    updateProfileVisibility,
+    updateVisibility,
     updateFlightTagDefault,
   } = useSocialStore();
   const [isSavingSocial, setIsSavingSocial] = useState(false);
@@ -501,7 +501,7 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
   const handleVisibilityChange = async (visibility: ProfileVisibility) => {
     setIsSavingSocial(true);
     try {
-      await updateProfileVisibility(visibility);
+      await updateVisibility(visibility);
     } catch (err) {
       console.error('Failed to update visibility:', err);
     } finally {

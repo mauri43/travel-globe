@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSocialStore } from '../../store/socialStore';
-import type { Friend } from '../../types/social';
+import type { FriendWithProfile } from '../../types/social';
 
 interface ShareFlightModalProps {
   isOpen: boolean;
@@ -57,7 +57,8 @@ export function ShareFlightModal({ isOpen, onClose, cityId, cityName }: ShareFli
     }
   };
 
-  const acceptedFriends = friends.filter((f) => f.status === 'accepted');
+  // Friends from store are already accepted (FriendWithProfile only includes accepted friends)
+  const acceptedFriends = friends;
 
   return (
     <AnimatePresence>
@@ -234,7 +235,7 @@ export function ShareFlightModal({ isOpen, onClose, cityId, cityName }: ShareFli
 }
 
 interface FriendCheckboxProps {
-  friend: Friend;
+  friend: FriendWithProfile;
   isSelected: boolean;
   onToggle: () => void;
 }

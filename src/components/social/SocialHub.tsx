@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useSocialStore, SocialTab } from '../../store/socialStore';
+import { useSocialStore } from '../../store/socialStore';
+import type { SocialTab } from '../../store/socialStore';
 import { FriendsTab } from './FriendsTab';
 import { FollowersTab } from './FollowersTab';
 import { SearchTab } from './SearchTab';

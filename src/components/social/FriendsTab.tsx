@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import { useSocialStore } from '../../store/socialStore';
 import { FriendCard } from './FriendCard';
 import { IncomingRequestCard, SentRequestCard } from './FriendRequestCard';
