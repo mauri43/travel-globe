@@ -102,7 +102,7 @@ export function SocialHub({ isOpen, onClose, onViewGlobe, onFlightAdded }: Socia
                 position: 'fixed',
                 inset: 0,
                 backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                zIndex: 40,
+                zIndex: 200,
               }}
             />
 
@@ -120,7 +120,7 @@ export function SocialHub({ isOpen, onClose, onViewGlobe, onFlightAdded }: Socia
                 width: '380px',
                 maxWidth: '100vw',
                 backgroundColor: '#1a1a2e',
-                zIndex: 50,
+                zIndex: 201,
                 display: 'flex',
                 flexDirection: 'column',
                 borderRight: '1px solid rgba(255, 255, 255, 0.1)',
@@ -172,10 +172,10 @@ export function SocialHub({ isOpen, onClose, onViewGlobe, onFlightAdded }: Socia
               <div
                 style={{
                   display: 'flex',
+                  flexWrap: 'wrap',
                   padding: '12px 16px',
                   gap: '8px',
                   borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-                  overflowX: 'auto',
                 }}
               >
                 {tabs.map((tab) => {
