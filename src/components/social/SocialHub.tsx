@@ -124,6 +124,8 @@ export function SocialHub({ isOpen, onClose, onViewGlobe, onFlightAdded }: Socia
                 display: 'flex',
                 flexDirection: 'column',
                 borderRight: '1px solid rgba(255, 255, 255, 0.1)',
+                overflowX: 'hidden',
+                overflowY: 'auto',
               }}
             >
               {/* Header */}

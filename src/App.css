@@ -836,6 +836,7 @@ body {
   height: 100%;
   background: var(--void-surface);
   border-left: 1px solid var(--void-border);
+  overflow-x: hidden;
   overflow-y: auto;
   box-shadow: -20px 0 60px rgba(0, 0, 0, 0.5);
 }
