@@ -64,7 +64,7 @@ export function Header() {
           <div className="stats">
             <div className="stat">
               <span className="stat-value">{cities.length}</span>
-              <span className="stat-label">Places Visited</span>
+              <span className="stat-label">Places Visited Test</span>
             </div>
             <div className="stat">
               <span className="stat-value">
