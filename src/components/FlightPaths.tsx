@@ -3,9 +3,11 @@ import { useFrame } from '@react-three/fiber';
 import { Line } from '@react-three/drei';
 import * as THREE from 'three';
 import { useStore } from '../store';
+import { useSocialStore } from '../store/socialStore';
 import { useTheme } from '../hooks/useTheme';
 import { latLngToVector3 } from './Globe';
 import { FlightParticleTrail } from './FlightParticleTrail';
+import type { City } from '../types';
 
 // Default origin: Washington, DC
 const DEFAULT_ORIGIN = {
@@ -254,17 +256,49 @@ interface FlightPathsProps {
 }
 
 export function FlightPaths({ globeRadius = 2 }: FlightPathsProps) {
-  const cities = useStore((state) => state.cities);
+  const myCities = useStore((state) => state.cities);
   const activeTagFilters = useStore((state) => state.activeTagFilters);
+
+  // Check if viewing someone else's globe
+  const viewingGlobe = useSocialStore((state) => state.viewingGlobe);
+
+  // Convert PublicFlight[] to City[] format for flight paths
+  const viewingCities: City[] = useMemo(() => {
+    if (!viewingGlobe) return [];
+    return viewingGlobe.map((flight) => ({
+      id: flight.id,
+      name: flight.destination.name,
+      country: flight.destination.country,
+      coordinates: {
+        lat: flight.destination.lat,
+        lng: flight.destination.lng,
+      },
+      dates: [],
+      photos: [],
+      videos: [],
+      memories: '',
+      tags: [],
+      flewFrom: {
+        name: flight.flewFrom.name,
+        coordinates: {
+          lat: flight.flewFrom.lat,
+          lng: flight.flewFrom.lng,
+        },
+      },
+    }));
+  }, [viewingGlobe]);
+
+  // Use viewing cities if viewing someone else's globe, otherwise use own cities
+  const cities = viewingGlobe ? viewingCities : myCities;
 
   // Generate flight paths from each city's origin to destination
   const flightPaths = useMemo(() => {
-    // Filter cities based on active tag filters
-    const filteredCities = activeTagFilters.length === 0
-      ? cities
-      : cities.filter((city) =>
+    // Filter cities based on active tag filters (only for own globe)
+    const filteredCities = !viewingGlobe && activeTagFilters.length > 0
+      ? cities.filter((city) =>
           activeTagFilters.some((tag) => city.tags.includes(tag))
-        );
+        )
+      : cities;
 
     return filteredCities
       .filter(city => city.coordinates.lat && city.coordinates.lng)
@@ -273,7 +307,7 @@ export function FlightPaths({ globeRadius = 2 }: FlightPathsProps) {
         const to = city.coordinates;
         return { from, to, index, id: city.id };
       });
-  }, [cities, activeTagFilters]);
+  }, [cities, activeTagFilters, viewingGlobe]);
 
   if (flightPaths.length === 0) return null;
 

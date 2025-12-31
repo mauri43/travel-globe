@@ -25,7 +25,15 @@ function App() {
   const [isSettingsOpen, setSettingsOpen] = useState(false);
   const [isThemeSelectorOpen, setThemeSelectorOpen] = useState(false);
   const [isSocialHubOpen, setSocialHubOpen] = useState(false);
-  const { usernameSetupOpen, setUsernameSetupOpen, username, loadSocialProfile } = useSocialStore();
+  const {
+    usernameSetupOpen,
+    setUsernameSetupOpen,
+    username,
+    loadSocialProfile,
+    viewUserGlobe,
+    viewingProfile,
+    clearViewingGlobe,
+  } = useSocialStore();
 
   // Load social profile when user is logged in
   useEffect(() => {
@@ -35,10 +43,18 @@ function App() {
   }, [user, loadSocialProfile]);
 
   // Handler for viewing another user's globe
-  const handleViewGlobe = (username: string) => {
-    // TODO: Implement public globe viewing
-    console.log('View globe for:', username);
-    setSocialHubOpen(false);
+  const handleViewGlobe = async (targetUsername: string) => {
+    try {
+      await viewUserGlobe(targetUsername);
+      setSocialHubOpen(false);
+    } catch (error) {
+      console.error('Failed to load globe:', error);
+    }
+  };
+
+  // Handler to go back to own globe
+  const handleBackToMyGlobe = () => {
+    clearViewingGlobe();
   };
 
   // Handler for when a shared flight is added to the user's globe
@@ -74,6 +90,46 @@ function App() {
       {/* Header */}
       <Header />
 
+      {/* Viewing Banner - when viewing another user's globe */}
+      {viewingProfile && (
+        <div
+          style={{
+            position: 'fixed',
+            top: '80px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 150,
+            backgroundColor: 'rgba(59, 130, 246, 0.95)',
+            padding: '12px 24px',
+            borderRadius: '12px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '16px',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+          }}
+        >
+          <span style={{ color: 'white', fontSize: '15px' }}>
+            Viewing <strong>@{viewingProfile.username}</strong>'s globe
+          </span>
+          <button
+            onClick={handleBackToMyGlobe}
+            style={{
+              backgroundColor: 'white',
+              color: '#3b82f6',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '8px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              fontSize: '14px',
+            }}
+          >
+            Back to My Globe
+          </button>
+        </div>
+      )}
+
       {/* 3D Globe Scene - wrapped in ErrorBoundary */}
       <ErrorBoundary
         fallback={
@@ -90,14 +146,14 @@ function App() {
         <Scene />
       </ErrorBoundary>
 
-      {/* Add Button */}
-      <AddButton />
+      {/* Add Button - hide when viewing someone else's globe */}
+      {!viewingProfile && <AddButton />}
 
-      {/* Tag Filter */}
-      <TagFilter />
+      {/* Tag Filter - hide when viewing someone else's globe */}
+      {!viewingProfile && <TagFilter />}
 
-      {/* Refresh Button */}
-      <RefreshButton />
+      {/* Refresh Button - hide when viewing someone else's globe */}
+      {!viewingProfile && <RefreshButton />}
 
       {/* Theme Button */}
       <ThemeButton onClick={() => setThemeSelectorOpen(true)} />

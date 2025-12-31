@@ -6,7 +6,9 @@ import { CountryBorders } from './CountryBorders';
 import { CountryHover } from './CountryHover';
 import { FlightPaths } from './FlightPaths';
 import { useStore } from '../store';
+import { useSocialStore } from '../store/socialStore';
 import { useTheme } from '../hooks/useTheme';
+import type { City } from '../types';
 
 // Convert lat/lng to 3D position on sphere
 export function latLngToVector3(lat: number, lng: number, radius: number): THREE.Vector3 {
@@ -47,11 +49,43 @@ const glowFragmentShader = `
 export function Globe() {
   const globeRef = useRef<THREE.Group>(null);
   const glowRef = useRef<THREE.Mesh>(null);
-  const cities = useStore((state) => state.cities);
+  const myCities = useStore((state) => state.cities);
   const activeTagFilters = useStore((state) => state.activeTagFilters);
   const activeTripFilters = useStore((state) => state.activeTripFilters);
   const activeYearFilters = useStore((state) => state.activeYearFilters);
   const { currentTheme } = useTheme();
+
+  // Check if viewing someone else's globe
+  const viewingGlobe = useSocialStore((state) => state.viewingGlobe);
+
+  // Convert PublicFlight[] to City[] format for rendering
+  const viewingCities: City[] = useMemo(() => {
+    if (!viewingGlobe) return [];
+    return viewingGlobe.map((flight) => ({
+      id: flight.id,
+      name: flight.destination.name,
+      country: flight.destination.country,
+      coordinates: {
+        lat: flight.destination.lat,
+        lng: flight.destination.lng,
+      },
+      dates: [],
+      photos: [],
+      videos: [],
+      memories: '',
+      tags: [],
+      flewFrom: {
+        name: flight.flewFrom.name,
+        coordinates: {
+          lat: flight.flewFrom.lat,
+          lng: flight.flewFrom.lng,
+        },
+      },
+    }));
+  }, [viewingGlobe]);
+
+  // Use viewing cities if viewing someone else's globe, otherwise use own cities
+  const cities = viewingGlobe ? viewingCities : myCities;
 
   // Filter cities based on active filters (tags, trips, years)
   const filteredCities = useMemo(() => {
