@@ -1,10 +1,47 @@
+import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useStore } from '../store';
+import { useSocialStore } from '../store/socialStore';
 import { calculateTotalMiles } from '../utils/distance';
+import type { City } from '../types';
 
 export function Header() {
-  const cities = useStore((state) => state.cities);
+  const myCities = useStore((state) => state.cities);
   const setPlacesListOpen = useStore((state) => state.setPlacesListOpen);
+
+  // Check if viewing someone else's globe
+  const viewingGlobe = useSocialStore((state) => state.viewingGlobe);
+  const viewingProfile = useSocialStore((state) => state.viewingProfile);
+
+  // Convert PublicFlight[] to City[] format for stats calculation
+  const viewingCities: City[] = useMemo(() => {
+    if (!viewingGlobe) return [];
+    return viewingGlobe.map((flight) => ({
+      id: flight.id,
+      name: flight.destination.name,
+      country: flight.destination.country,
+      coordinates: {
+        lat: flight.destination.lat,
+        lng: flight.destination.lng,
+      },
+      dates: [],
+      photos: [],
+      videos: [],
+      memories: '',
+      tags: [],
+      flewFrom: {
+        name: flight.flewFrom.name,
+        coordinates: {
+          lat: flight.flewFrom.lat,
+          lng: flight.flewFrom.lng,
+        },
+      },
+    }));
+  }, [viewingGlobe]);
+
+  // Use viewing cities if viewing someone else's globe, otherwise use own cities
+  const cities = viewingGlobe ? viewingCities : myCities;
+  const isViewingOther = !!viewingProfile;
 
   const totalMiles = calculateTotalMiles(cities);
 
@@ -46,19 +83,21 @@ export function Header() {
             </div>
             <h1>Travel Memories</h1>
           </div>
-          <button
-            className="places-list-btn"
-            onClick={() => setPlacesListOpen(true)}
-            title="View all places"
-            data-tour-target="places-list"
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <line x1="3" y1="6" x2="21" y2="6" />
-              <line x1="3" y1="12" x2="21" y2="12" />
-              <line x1="3" y1="18" x2="21" y2="18" />
-            </svg>
-            <span>My Places</span>
-          </button>
+          {!isViewingOther && (
+            <button
+              className="places-list-btn"
+              onClick={() => setPlacesListOpen(true)}
+              title="View all places"
+              data-tour-target="places-list"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="3" y1="6" x2="21" y2="6" />
+                <line x1="3" y1="12" x2="21" y2="12" />
+                <line x1="3" y1="18" x2="21" y2="18" />
+              </svg>
+              <span>My Places</span>
+            </button>
+          )}
         </div>
         <div className="stats-container" data-tour-target="stats">
           <div className="stats">
