@@ -8,6 +8,7 @@ interface NextUnlockProgress {
   current: number;
   required: number;
   progress: number;
+  type: 'countries' | 'places';
 }
 
 interface UseThemeReturn {
@@ -41,12 +42,21 @@ export function useTheme(): UseThemeReturn {
     return countries.size;
   }, [cities]);
 
-  // Determine unlocked themes based on country count
+  // Total places visited
+  const totalPlaces = cities.length;
+
+  // Determine unlocked themes based on country count OR places count
   const unlockedThemes = useMemo(() => {
-    return THEME_ORDER.filter(
-      themeId => THEMES[themeId].requiredCountries <= uniqueCountries
-    );
-  }, [uniqueCountries]);
+    return THEME_ORDER.filter(themeId => {
+      const theme = THEMES[themeId];
+      // Check places requirement first (if set)
+      if (theme.requiredPlaces !== undefined) {
+        return totalPlaces >= theme.requiredPlaces;
+      }
+      // Otherwise check countries
+      return theme.requiredCountries <= uniqueCountries;
+    });
+  }, [uniqueCountries, totalPlaces]);
 
   // Get current theme config (fallback to starter if selected is locked)
   const currentTheme = useMemo(() => {
@@ -67,13 +77,26 @@ export function useTheme(): UseThemeReturn {
     }
 
     const nextTheme = THEMES[lockedThemes[0]];
+
+    // Check if this theme uses places or countries
+    if (nextTheme.requiredPlaces !== undefined) {
+      return {
+        theme: nextTheme,
+        current: totalPlaces,
+        required: nextTheme.requiredPlaces,
+        progress: Math.min(1, totalPlaces / nextTheme.requiredPlaces),
+        type: 'places',
+      };
+    }
+
     return {
       theme: nextTheme,
       current: uniqueCountries,
       required: nextTheme.requiredCountries,
       progress: Math.min(1, uniqueCountries / nextTheme.requiredCountries),
+      type: 'countries',
     };
-  }, [unlockedThemes, uniqueCountries]);
+  }, [unlockedThemes, uniqueCountries, totalPlaces]);
 
   return {
     currentTheme,

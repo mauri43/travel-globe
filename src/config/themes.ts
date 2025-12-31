@@ -45,6 +45,7 @@ export interface ThemeConfig {
   displayName: string;
   description: string;
   requiredCountries: number;
+  requiredPlaces?: number; // Alternative unlock via places visited
   colors: ThemeColors;
   features?: ThemeFeatures;
   animation?: ThemeAnimation;
@@ -126,7 +127,8 @@ export const THEMES: Record<ThemeTierId, ThemeConfig> = {
     name: 'Gold Legend',
     displayName: 'Gold Legend',
     description: 'Holographic prismatic shader effects',
-    requiredCountries: 30,
+    requiredCountries: 999, // Use requiredPlaces instead
+    requiredPlaces: 50,
     colors: {
       glowColor: 0xffd700,
       oceanColor: 0x1a1a2e,
