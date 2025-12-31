@@ -1246,6 +1246,9 @@ router.post('/flights/:cityId/share', requireAuth, async (req: AuthRequest, res:
       },
     };
 
+    // Track friends who will be auto-approved so we can create cities for them
+    const autoApprovedFriends: { uid: string; username: string }[] = [];
+
     // Check each friend's permission settings and set initial status
     for (let i = 0; i < friendUids.length; i++) {
       const friendUid = friendUids[i];
@@ -1276,7 +1279,8 @@ router.post('/flights/:cityId/share', requireAuth, async (req: AuthRequest, res:
 
       let status: string;
       if (permission === 'auto_approve') {
-        status = 'approved';
+        status = 'added'; // Changed from 'approved' - they're automatically added
+        autoApprovedFriends.push({ uid: friendUid, username: friendUsernames[i] });
       } else if (permission === 'auto_deny') {
         status = 'declined';
       } else {
@@ -1284,9 +1288,9 @@ router.post('/flights/:cityId/share', requireAuth, async (req: AuthRequest, res:
       }
 
       const participantData: any = {
-        cityId: null,
+        cityId: null, // Will be set later for auto-approved
         status,
-        addedToGlobe: false,
+        addedToGlobe: permission === 'auto_approve', // True for auto-approve
         invitedAt: now,
       };
       // Only add respondedAt if not pending (Firestore doesn't allow undefined)
@@ -1326,13 +1330,48 @@ router.post('/flights/:cityId/share', requireAuth, async (req: AuthRequest, res:
     });
     console.log('[ShareFlight] City updated');
 
-    // Send notifications (only to pending users)
+    // Step 6.5: Create city copies for auto-approved friends
+    console.log('[ShareFlight] Step 6.5: Creating cities for auto-approved friends...');
+    console.log('[ShareFlight] Auto-approved friends:', autoApprovedFriends);
+
+    for (const friend of autoApprovedFriends) {
+      console.log('[ShareFlight] Creating city for auto-approved friend:', friend.username);
+
+      // Copy the city to the friend's account
+      const newCity = {
+        ...cityData,
+        userId: friend.uid,
+        sharedFlightId: sharedFlightRef.id,
+        isSharedInstance: true,
+        participants: Object.keys(participants),
+        source: 'shared' as const,
+        createdAt: now,
+        updatedAt: now,
+      };
+
+      // Remove fields that shouldn't be copied
+      delete (newCity as any).id;
+
+      const newCityRef = await db().collection('cities').add(newCity);
+      console.log('[ShareFlight] Created city for', friend.username, ':', newCityRef.id);
+
+      // Update the participant's cityId in the shared flight document
+      await sharedFlightRef.update({
+        [`participants.${friend.uid}.cityId`]: newCityRef.id,
+      });
+      console.log('[ShareFlight] Updated participant cityId for:', friend.username);
+    }
+
+    // Send notifications
     console.log('[ShareFlight] Step 7: Sending notifications...');
     for (let i = 0; i < friendUids.length; i++) {
       const friendUid = friendUids[i];
-      console.log('[ShareFlight] Checking notification for:', friendUid, 'status:', participants[friendUid].status);
-      if (participants[friendUid].status === 'pending') {
-        console.log('[ShareFlight] Creating notification for:', friendUid);
+      const participantStatus = participants[friendUid].status;
+      console.log('[ShareFlight] Checking notification for:', friendUid, 'status:', participantStatus);
+
+      if (participantStatus === 'pending') {
+        // User needs to approve - send flight_tag notification
+        console.log('[ShareFlight] Creating pending notification for:', friendUid);
         await createNotification(friendUid, 'flight_tag', {
           fromUid: userId,
           fromUsername: currentUserData.username || '',
@@ -1340,6 +1379,16 @@ router.post('/flights/:cityId/share', requireAuth, async (req: AuthRequest, res:
           flightName: cityData.name,
         });
         console.log('[ShareFlight] Notification created for:', friendUid);
+      } else if (participantStatus === 'added') {
+        // User was auto-approved - send flight_tag_accepted notification to let them know
+        console.log('[ShareFlight] Creating auto-approved notification for:', friendUid);
+        await createNotification(friendUid, 'flight_tag_accepted', {
+          fromUid: userId,
+          fromUsername: currentUserData.username || '',
+          sharedFlightId: sharedFlightRef.id,
+          flightName: cityData.name,
+        });
+        console.log('[ShareFlight] Auto-approved notification created for:', friendUid);
       }
     }
 
