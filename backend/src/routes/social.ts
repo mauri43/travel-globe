@@ -1193,6 +1193,9 @@ router.post('/flights/:cityId/share', requireAuth, async (req: AuthRequest, res:
 
     // Get current user data
     const currentUserDoc = await db().collection('users').doc(userId).get();
+    if (!currentUserDoc.exists) {
+      return res.status(400).json({ error: 'Your user profile not found. Please set up your username first.' });
+    }
     const currentUserData = currentUserDoc.data()!;
 
     // Validate all usernames are friends
@@ -1230,7 +1233,7 @@ router.post('/flights/:cityId/share', requireAuth, async (req: AuthRequest, res:
     for (let i = 0; i < friendUids.length; i++) {
       const friendUid = friendUids[i];
       const friendDoc = await db().collection('users').doc(friendUid).get();
-      const friendData = friendDoc.data()!;
+      const friendData = friendDoc.exists ? friendDoc.data()! : {};
 
       // Get friendship to check for per-friend override
       const friendshipQuery = await db()
@@ -1310,9 +1313,10 @@ router.post('/flights/:cityId/share', requireAuth, async (req: AuthRequest, res:
     }
 
     res.json({ sharedFlightId: sharedFlightRef.id });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error sharing flight:', error);
-    res.status(500).json({ error: 'Failed to share flight' });
+    console.error('Error stack:', error?.stack);
+    res.status(500).json({ error: 'Failed to share flight', details: error?.message });
   }
 });
 
