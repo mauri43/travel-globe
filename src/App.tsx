@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Scene } from './components/Scene';
 import { Header } from './components/Header';
 import { MemoryModal } from './components/MemoryModal';
@@ -25,7 +25,14 @@ function App() {
   const [isSettingsOpen, setSettingsOpen] = useState(false);
   const [isThemeSelectorOpen, setThemeSelectorOpen] = useState(false);
   const [isSocialHubOpen, setSocialHubOpen] = useState(false);
-  const { usernameSetupOpen, setUsernameSetupOpen, username } = useSocialStore();
+  const { usernameSetupOpen, setUsernameSetupOpen, username, loadSocialProfile } = useSocialStore();
+
+  // Load social profile when user is logged in
+  useEffect(() => {
+    if (user) {
+      loadSocialProfile();
+    }
+  }, [user, loadSocialProfile]);
 
   // Handler for viewing another user's globe
   const handleViewGlobe = (username: string) => {

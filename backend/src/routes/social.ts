@@ -187,6 +187,42 @@ router.put('/username', requireAuth, async (req: AuthRequest, res: Response) => 
 // PROFILE ENDPOINTS
 // ==========================================
 
+// Get current user's own social profile
+router.get('/me', requireAuth, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user!.uid;
+    const userDoc = await db().collection('users').doc(userId).get();
+
+    if (!userDoc.exists) {
+      // User document doesn't exist yet - return null values
+      return res.json({
+        username: null,
+        displayName: null,
+        profileVisibility: 'private',
+        flightTagDefault: 'approve_required',
+        friendCount: 0,
+        followerCount: 0,
+        followingCount: 0,
+      });
+    }
+
+    const userData = userDoc.data()!;
+
+    res.json({
+      username: userData.username || null,
+      displayName: userData.displayName || null,
+      profileVisibility: userData.profileVisibility || 'private',
+      flightTagDefault: userData.flightTagDefault || 'approve_required',
+      friendCount: userData.friendCount || 0,
+      followerCount: userData.followerCount || 0,
+      followingCount: userData.followingCount || 0,
+    });
+  } catch (error) {
+    console.error('Error getting own profile:', error);
+    res.status(500).json({ error: 'Failed to get profile' });
+  }
+});
+
 // Get public profile by username
 router.get('/profile/:username', requireAuth, async (req: AuthRequest, res: Response) => {
   try {

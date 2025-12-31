@@ -157,14 +157,15 @@ export const useSocialStore = create<SocialState>()((set, get) => ({
   // Profile Actions
   loadSocialProfile: async () => {
     try {
-      const profile = await socialApi.getProfile(get().username || '');
+      const profile = await socialApi.getMyProfile();
       set({
         username: profile.username,
-        displayName: profile.displayName || null,
+        displayName: profile.displayName,
         profileVisibility: profile.profileVisibility,
+        flightTagDefault: profile.flightTagDefault,
       });
     } catch {
-      // Profile not found or username not set - this is expected for new users
+      // Failed to load profile - this is expected for new users or network issues
     }
   },
 

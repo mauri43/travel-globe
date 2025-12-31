@@ -40,6 +40,24 @@ async function fetchWithAuth(endpoint: string, options: RequestInit = {}) {
 }
 
 // ==========================================
+// MY PROFILE (Current User)
+// ==========================================
+
+export interface MyProfile {
+  username: string | null;
+  displayName: string | null;
+  profileVisibility: ProfileVisibility;
+  flightTagDefault: FlightTagPermission;
+  friendCount: number;
+  followerCount: number;
+  followingCount: number;
+}
+
+export async function getMyProfile(): Promise<MyProfile> {
+  return fetchWithAuth('/api/social/me');
+}
+
+// ==========================================
 // USERNAME
 // ==========================================
 
