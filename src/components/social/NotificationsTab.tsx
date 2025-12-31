@@ -157,6 +157,10 @@ const notificationConfig: Record<
     icon: '✅',
     getMessage: (data) => `@${data.fromUsername} accepted your shared flight`,
   },
+  flight_tag_auto_added: {
+    icon: '🌍',
+    getMessage: (data) => `@${data.fromUsername} added you to their flight: ${data.flightName}`,
+  },
   new_follower: {
     icon: '👤',
     getMessage: (data) => `@${data.followerUsername} started following you`,

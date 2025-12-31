@@ -18,6 +18,7 @@ export type NotificationType =
   | 'friend_request_accepted'
   | 'flight_tag'
   | 'flight_tag_accepted'
+  | 'flight_tag_auto_added'
   | 'new_follower';
 
 // User document with social fields

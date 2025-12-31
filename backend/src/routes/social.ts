@@ -1380,15 +1380,15 @@ router.post('/flights/:cityId/share', requireAuth, async (req: AuthRequest, res:
         });
         console.log('[ShareFlight] Notification created for:', friendUid);
       } else if (participantStatus === 'added') {
-        // User was auto-approved - send flight_tag_accepted notification to let them know
-        console.log('[ShareFlight] Creating auto-approved notification for:', friendUid);
-        await createNotification(friendUid, 'flight_tag_accepted', {
+        // User was auto-approved - send flight_tag_auto_added notification to let them know
+        console.log('[ShareFlight] Creating auto-added notification for:', friendUid);
+        await createNotification(friendUid, 'flight_tag_auto_added', {
           fromUid: userId,
           fromUsername: currentUserData.username || '',
           sharedFlightId: sharedFlightRef.id,
           flightName: cityData.name,
         });
-        console.log('[ShareFlight] Auto-approved notification created for:', friendUid);
+        console.log('[ShareFlight] Auto-added notification created for:', friendUid);
       }
     }
 
