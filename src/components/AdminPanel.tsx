@@ -598,7 +598,14 @@ export function AdminPanel() {
       // Send share invitations to selected friends
       if (savedCityId && formData.sharedWith.length > 0) {
         try {
-          await socialApi.shareFlightWithFriends(savedCityId, formData.sharedWith);
+          // Convert UIDs to usernames for the API
+          const friendUsernames = formData.sharedWith
+            .map(uid => friends.find(f => f.uid === uid)?.username)
+            .filter((username): username is string => !!username);
+
+          if (friendUsernames.length > 0) {
+            await socialApi.shareFlightWithFriends(savedCityId, friendUsernames);
+          }
         } catch (shareError) {
           console.error('Failed to share flight with friends:', shareError);
           // Don't fail the whole operation if sharing fails
