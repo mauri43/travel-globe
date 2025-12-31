@@ -1179,46 +1179,63 @@ router.post('/flights/:cityId/share', requireAuth, async (req: AuthRequest, res:
     const { friendUsernames } = req.body;
     const userId = req.user!.uid;
 
+    console.log('[ShareFlight] Starting share for cityId:', cityId, 'by user:', userId);
+    console.log('[ShareFlight] Friend usernames:', friendUsernames);
+
     if (!Array.isArray(friendUsernames) || friendUsernames.length === 0) {
       return res.status(400).json({ error: 'At least one friend username is required' });
     }
 
     // Verify city belongs to user
+    console.log('[ShareFlight] Step 1: Getting city document...');
     const cityDoc = await db().collection('cities').doc(cityId).get();
     if (!cityDoc.exists || cityDoc.data()?.userId !== userId) {
+      console.log('[ShareFlight] City not found or not owned by user');
       return res.status(404).json({ error: 'City not found' });
     }
 
     const cityData = cityDoc.data()!;
+    console.log('[ShareFlight] City found:', cityData.name);
 
     // Get current user data
+    console.log('[ShareFlight] Step 2: Getting current user document...');
     const currentUserDoc = await db().collection('users').doc(userId).get();
     if (!currentUserDoc.exists) {
+      console.log('[ShareFlight] Current user document not found');
       return res.status(400).json({ error: 'Your user profile not found. Please set up your username first.' });
     }
     const currentUserData = currentUserDoc.data()!;
+    console.log('[ShareFlight] Current user:', currentUserData.username);
 
     // Validate all usernames are friends
+    console.log('[ShareFlight] Step 3: Validating friend usernames...');
     const friendUids: string[] = [];
     for (const username of friendUsernames) {
+      console.log('[ShareFlight] Looking up username:', username);
       const usernameDoc = await db().collection('usernames').doc(username.toLowerCase()).get();
       if (!usernameDoc.exists) {
+        console.log('[ShareFlight] Username not found:', username);
         return res.status(400).json({ error: `User ${username} not found` });
       }
 
       const friendUid = usernameDoc.data()!.uid;
+      console.log('[ShareFlight] Found uid for', username, ':', friendUid);
 
       // Check friendship
       const relationship = await getRelationship(userId, friendUid);
+      console.log('[ShareFlight] Relationship with', username, ':', relationship);
       if (!relationship.isFriend) {
+        console.log('[ShareFlight] Not friends with:', username);
         return res.status(400).json({ error: `${username} is not your friend` });
       }
 
       friendUids.push(friendUid);
     }
+    console.log('[ShareFlight] All friends validated:', friendUids);
 
     const now = new Date().toISOString();
 
+    console.log('[ShareFlight] Step 4: Building participants...');
     // Create or update shared flight
     const participants: Record<string, any> = {
       [userId]: {
@@ -1275,6 +1292,9 @@ router.post('/flights/:cityId/share', requireAuth, async (req: AuthRequest, res:
       };
     }
 
+    console.log('[ShareFlight] Step 5: Creating shared flight document...');
+    console.log('[ShareFlight] Participants:', JSON.stringify(participants, null, 2));
+
     const sharedFlight: Omit<SharedFlightDocument, 'id'> = {
       originalCityId: cityId,
       originalOwnerId: userId,
@@ -1292,26 +1312,34 @@ router.post('/flights/:cityId/share', requireAuth, async (req: AuthRequest, res:
     };
 
     const sharedFlightRef = await db().collection('sharedFlights').add(sharedFlight);
+    console.log('[ShareFlight] Created shared flight:', sharedFlightRef.id);
 
     // Update original city with shared flight reference
+    console.log('[ShareFlight] Step 6: Updating original city...');
     await cityDoc.ref.update({
       sharedFlightId: sharedFlightRef.id,
       participants: [userId, ...friendUids],
     });
+    console.log('[ShareFlight] City updated');
 
     // Send notifications (only to pending users)
+    console.log('[ShareFlight] Step 7: Sending notifications...');
     for (let i = 0; i < friendUids.length; i++) {
       const friendUid = friendUids[i];
+      console.log('[ShareFlight] Checking notification for:', friendUid, 'status:', participants[friendUid].status);
       if (participants[friendUid].status === 'pending') {
+        console.log('[ShareFlight] Creating notification for:', friendUid);
         await createNotification(friendUid, 'flight_tag', {
           fromUid: userId,
           fromUsername: currentUserData.username || '',
           sharedFlightId: sharedFlightRef.id,
           flightName: cityData.name,
         });
+        console.log('[ShareFlight] Notification created for:', friendUid);
       }
     }
 
+    console.log('[ShareFlight] Success! Returning sharedFlightId:', sharedFlightRef.id);
     res.json({ sharedFlightId: sharedFlightRef.id });
   } catch (error: any) {
     console.error('Error sharing flight:', error);
