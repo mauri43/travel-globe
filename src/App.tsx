@@ -17,6 +17,7 @@ import { OnboardingTour } from './components/OnboardingTour';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { useAuth } from './components/AuthContext';
 import { SocialButton, SocialHub, UsernameSetup } from './components/social';
+import { useStore } from './store';
 import { useSocialStore } from './store/socialStore';
 import './App.css';
 
@@ -25,6 +26,7 @@ function App() {
   const [isSettingsOpen, setSettingsOpen] = useState(false);
   const [isThemeSelectorOpen, setThemeSelectorOpen] = useState(false);
   const [isSocialHubOpen, setSocialHubOpen] = useState(false);
+  const refreshCities = useStore((state) => state.refreshCities);
   const {
     usernameSetupOpen,
     setUsernameSetupOpen,
@@ -58,9 +60,10 @@ function App() {
   };
 
   // Handler for when a shared flight is added to the user's globe
-  const handleFlightAdded = (cityId: string) => {
-    // TODO: Trigger globe refresh and possibly focus on the new city
+  const handleFlightAdded = async (cityId: string) => {
     console.log('Flight added:', cityId);
+    // Refresh the cities list to show the new flight on the globe
+    await refreshCities();
   };
 
   // Show loading state while checking auth
