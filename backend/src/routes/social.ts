@@ -1283,13 +1283,17 @@ router.post('/flights/:cityId/share', requireAuth, async (req: AuthRequest, res:
         status = 'pending';
       }
 
-      participants[friendUid] = {
+      const participantData: any = {
         cityId: null,
         status,
         addedToGlobe: false,
         invitedAt: now,
-        respondedAt: permission !== 'approve_required' ? now : undefined,
       };
+      // Only add respondedAt if not pending (Firestore doesn't allow undefined)
+      if (permission !== 'approve_required') {
+        participantData.respondedAt = now;
+      }
+      participants[friendUid] = participantData;
     }
 
     console.log('[ShareFlight] Step 5: Creating shared flight document...');
