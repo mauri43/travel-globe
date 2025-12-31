@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '../store';
+import { useSocialStore } from '../store/socialStore';
 import { DatePicker } from './DatePicker';
 import { getUserProfile } from '../services/api';
+import * as socialApi from '../services/socialApi';
 
 // Google Places API key
 const GOOGLE_PLACES_API_KEY = 'AIzaSyB9TQe9WP_CBsVtJ6Z7WxjaygP8B1yxwTY';
@@ -59,6 +61,7 @@ interface FormData {
   videos: string[];
   memories: string;
   tags: string[];
+  sharedWith: string[]; // Friend UIDs to share with
 }
 
 const initialFormData: FormData = {
@@ -77,6 +80,7 @@ const initialFormData: FormData = {
   videos: [],
   memories: '',
   tags: [],
+  sharedWith: [],
 };
 
 // Default origin fallback: Washington, DC
@@ -98,6 +102,7 @@ interface DefaultOrigin {
 
 export function AdminPanel() {
   const { cities, isAdminOpen, setAdminOpen, addCityWithApi, updateCityWithApi, deleteCityWithApi, editingCity, setEditingCity } = useStore();
+  const { friends, loadFriends, username } = useSocialStore();
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [tagInput, setTagInput] = useState('');
   const [userDefaultOrigin, setUserDefaultOrigin] = useState<DefaultOrigin | null>(null);
@@ -109,6 +114,7 @@ export function AdminPanel() {
   const [showFlewFromPredictions, setShowFlewFromPredictions] = useState(false);
   const [isLoadingFlewFrom, setIsLoadingFlewFrom] = useState(false);
   const [showTripSuggestions, setShowTripSuggestions] = useState(false);
+  const [friendSearchQuery, setFriendSearchQuery] = useState('');
 
   // Get all existing trip names for autocomplete
   const existingTripNames = useMemo(() => {
@@ -190,8 +196,13 @@ export function AdminPanel() {
         console.error('Failed to load user profile:', err);
         setUserDefaultOrigin(FALLBACK_ORIGIN);
       });
+
+      // Load friends list for sharing
+      if (username) {
+        loadFriends();
+      }
     }
-  }, [isAdminOpen]);
+  }, [isAdminOpen, username, loadFriends]);
 
   // Populate form when editing
   useEffect(() => {
@@ -212,6 +223,7 @@ export function AdminPanel() {
         videos: editingCity.videos,
         memories: editingCity.memories,
         tags: editingCity.tags,
+        sharedWith: [], // Don't pre-populate shared users when editing
       });
     } else {
       setFormData(initialFormData);
@@ -573,10 +585,24 @@ export function AdminPanel() {
         tags: formData.tags,
       };
 
+      let savedCityId: string | undefined;
+
       if (editingCity) {
         await updateCityWithApi(editingCity.id, cityData);
+        savedCityId = editingCity.id;
       } else {
-        await addCityWithApi(cityData);
+        const newCity = await addCityWithApi(cityData);
+        savedCityId = newCity.id;
+      }
+
+      // Send share invitations to selected friends
+      if (savedCityId && formData.sharedWith.length > 0) {
+        try {
+          await socialApi.shareFlightWithFriends(savedCityId, formData.sharedWith);
+        } catch (shareError) {
+          console.error('Failed to share flight with friends:', shareError);
+          // Don't fail the whole operation if sharing fails
+        }
       }
 
       handleClose();
@@ -608,6 +634,7 @@ export function AdminPanel() {
     setEditingCity(null);
     setFormData(initialFormData);
     setTagInput('');
+    setFriendSearchQuery('');
   };
 
   if (!isAdminOpen) return null;
@@ -964,6 +991,141 @@ export function AdminPanel() {
                 )}
               </div>
             </div>
+
+            {/* Share with Friends */}
+            {username && friends.length > 0 && (
+              <div className="form-group">
+                <label>Share with Friends</label>
+                <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', marginBottom: '8px' }}>
+                  Tag friends who were on this trip with you
+                </p>
+
+                {/* Search friends */}
+                <input
+                  type="text"
+                  value={friendSearchQuery}
+                  onChange={(e) => setFriendSearchQuery(e.target.value)}
+                  placeholder="Search friends..."
+                  style={{ marginBottom: '12px' }}
+                />
+
+                {/* Selected friends */}
+                {formData.sharedWith.length > 0 && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '12px' }}>
+                    {formData.sharedWith.map((uid) => {
+                      const friend = friends.find(f => f.uid === uid);
+                      if (!friend) return null;
+                      return (
+                        <span
+                          key={uid}
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            padding: '4px 10px',
+                            backgroundColor: 'rgba(59, 130, 246, 0.3)',
+                            borderRadius: '16px',
+                            fontSize: '13px',
+                            color: '#60a5fa',
+                          }}
+                        >
+                          @{friend.username}
+                          <button
+                            type="button"
+                            onClick={() => setFormData({
+                              ...formData,
+                              sharedWith: formData.sharedWith.filter(id => id !== uid)
+                            })}
+                            style={{
+                              background: 'none',
+                              border: 'none',
+                              color: '#60a5fa',
+                              cursor: 'pointer',
+                              padding: '0',
+                              display: 'flex',
+                            }}
+                          >
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14">
+                              <path d="M18 6L6 18M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </span>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Friends list */}
+                <div style={{
+                  maxHeight: '150px',
+                  overflowY: 'auto',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: '8px',
+                }}>
+                  {friends
+                    .filter(friend =>
+                      !formData.sharedWith.includes(friend.uid) &&
+                      (friendSearchQuery === '' ||
+                       friend.username.toLowerCase().includes(friendSearchQuery.toLowerCase()) ||
+                       friend.displayName?.toLowerCase().includes(friendSearchQuery.toLowerCase()))
+                    )
+                    .map((friend) => (
+                      <button
+                        key={friend.uid}
+                        type="button"
+                        onClick={() => setFormData({
+                          ...formData,
+                          sharedWith: [...formData.sharedWith, friend.uid]
+                        })}
+                        style={{
+                          width: '100%',
+                          padding: '10px 12px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '10px',
+                          background: 'none',
+                          border: 'none',
+                          borderBottom: '1px solid rgba(255,255,255,0.05)',
+                          color: 'white',
+                          cursor: 'pointer',
+                          textAlign: 'left',
+                        }}
+                      >
+                        <span style={{
+                          width: '32px',
+                          height: '32px',
+                          borderRadius: '50%',
+                          backgroundColor: 'rgba(255,255,255,0.1)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '14px',
+                        }}>
+                          👤
+                        </span>
+                        <div>
+                          <div style={{ fontWeight: '500' }}>@{friend.username}</div>
+                          {friend.displayName && (
+                            <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)' }}>
+                              {friend.displayName}
+                            </div>
+                          )}
+                        </div>
+                      </button>
+                    ))}
+                  {friends.filter(f => !formData.sharedWith.includes(f.uid)).length === 0 && (
+                    <div style={{
+                      padding: '20px',
+                      textAlign: 'center',
+                      color: 'rgba(255,255,255,0.4)',
+                      fontSize: '13px',
+                    }}>
+                      {formData.sharedWith.length > 0 ? 'All friends selected' : 'No friends to show'}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Actions */}
             <div className="form-actions">
