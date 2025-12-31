@@ -409,10 +409,12 @@ export const useSocialStore = create<SocialState>()((set, get) => ({
   loadPendingSharedFlights: async () => {
     set({ sharedFlightsLoading: true });
     try {
+      console.log('[Social] Loading pending shared flights...');
       const result = await socialApi.getPendingSharedFlights();
+      console.log('[Social] Loaded shared flights:', result);
       set({ pendingSharedFlights: result.sharedFlights, sharedFlightsLoading: false });
     } catch (error) {
-      console.error('Failed to load shared flights:', error);
+      console.error('[Social] Failed to load shared flights:', error);
       set({ sharedFlightsLoading: false });
     }
   },
@@ -439,10 +441,12 @@ export const useSocialStore = create<SocialState>()((set, get) => ({
 
   shareFlightWithFriends: async (cityId, friendUsernames) => {
     try {
+      console.log('[Social] Sharing flight:', cityId, 'with:', friendUsernames);
       const result = await socialApi.shareFlightWithFriends(cityId, friendUsernames);
+      console.log('[Social] Share result:', result);
       return result.sharedFlightId;
     } catch (error) {
-      console.error('Failed to share flight:', error);
+      console.error('[Social] Failed to share flight:', error);
       throw error;
     }
   },

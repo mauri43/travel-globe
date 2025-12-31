@@ -603,12 +603,15 @@ export function AdminPanel() {
             .map(uid => friends.find(f => f.uid === uid)?.username)
             .filter((username): username is string => !!username);
 
+          console.log('[AdminPanel] Sharing with usernames:', friendUsernames);
+
           if (friendUsernames.length > 0) {
-            await socialApi.shareFlightWithFriends(savedCityId, friendUsernames);
+            const result = await socialApi.shareFlightWithFriends(savedCityId, friendUsernames);
+            console.log('[AdminPanel] Share successful, ID:', result.sharedFlightId);
           }
         } catch (shareError) {
-          console.error('Failed to share flight with friends:', shareError);
-          // Don't fail the whole operation if sharing fails
+          console.error('[AdminPanel] Failed to share flight with friends:', shareError);
+          alert('Failed to share flight with friends. The flight was saved but sharing failed.');
         }
       }
 
