@@ -647,23 +647,25 @@ export function AdminPanel() {
     setFriendSearchQuery('');
   };
 
-  if (!isAdminOpen) return null;
-
+  // The open gate lives inside AnimatePresence so exit animations can run
   return (
     <AnimatePresence>
+      {isAdminOpen && (
       <motion.div
         className="admin-overlay"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
+        exit={{ opacity: 0, transition: { duration: 0.15, ease: 'easeOut' } }}
+        transition={{ duration: 0.2, ease: 'easeOut' }}
         onClick={handleClose}
       >
         <motion.div
           className="admin-panel"
-          initial={{ opacity: 0, x: 100 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: 100 }}
-          transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+          // Slide by the panel's own width — no fade; drawers move, they don't dissolve
+          initial={{ x: '105%' }}
+          animate={{ x: 0 }}
+          exit={{ x: '105%', transition: { duration: 0.25, ease: [0.32, 0.72, 0, 1] } }}
+          transition={{ type: 'spring', duration: 0.5, bounce: 0 }}
           onClick={(e) => e.stopPropagation()}
         >
           <div className="admin-header">
@@ -1154,6 +1156,7 @@ export function AdminPanel() {
           </form>
         </motion.div>
       </motion.div>
+      )}
     </AnimatePresence>
   );
 }

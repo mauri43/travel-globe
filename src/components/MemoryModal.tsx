@@ -1,20 +1,26 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '../store';
 import { ShareFlightModal } from './social';
+import type { City } from '../types';
 
+// AnimatePresence must stay mounted while its child unmounts, otherwise exit
+// animations never run. The store gate lives here; the modal body is a child.
 export function MemoryModal() {
-  const { selectedCity, setSelectedCity, setAdminOpen, setEditingCity } = useStore();
+  const selectedCity = useStore((state) => state.selectedCity);
+
+  return (
+    <AnimatePresence>
+      {/* Keyed by city id: switching cities remounts with fresh gallery state */}
+      {selectedCity && <MemoryModalContent key={selectedCity.id} city={selectedCity} />}
+    </AnimatePresence>
+  );
+}
+
+function MemoryModalContent({ city }: { city: City }) {
+  const { setSelectedCity, setAdminOpen, setEditingCity } = useStore();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isShareModalOpen, setShareModalOpen] = useState(false);
-
-  // Reset image index when city changes
-  useEffect(() => {
-    setCurrentImageIndex(0);
-    setShareModalOpen(false);
-  }, [selectedCity]);
-
-  if (!selectedCity) return null;
 
   const formatDate = (dateStr: string) => {
     // Parse the date string directly to avoid timezone issues
@@ -29,40 +35,47 @@ export function MemoryModal() {
   };
 
   const handleEdit = () => {
-    setEditingCity(selectedCity);
+    setEditingCity(city);
     setSelectedCity(null);
     setAdminOpen(true);
   };
 
   const nextImage = () => {
-    if (selectedCity.photos.length > 0) {
-      setCurrentImageIndex((prev) => (prev + 1) % selectedCity.photos.length);
+    if (city.photos.length > 0) {
+      setCurrentImageIndex((prev) => (prev + 1) % city.photos.length);
     }
   };
 
   const prevImage = () => {
-    if (selectedCity.photos.length > 0) {
+    if (city.photos.length > 0) {
       setCurrentImageIndex(
-        (prev) => (prev - 1 + selectedCity.photos.length) % selectedCity.photos.length
+        (prev) => (prev - 1 + city.photos.length) % city.photos.length
       );
     }
   };
 
   return (
-    <AnimatePresence>
+    <>
       <motion.div
         className="modal-overlay"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
+        // Exit faster than enter — the user asked for it to leave
+        exit={{ opacity: 0, transition: { duration: 0.15, ease: 'easeOut' } }}
+        transition={{ duration: 0.2, ease: 'easeOut' }}
         onClick={() => setSelectedCity(null)}
       >
         <motion.div
           className="modal-content"
-          initial={{ opacity: 0, scale: 0.9, y: 20 }}
+          initial={{ opacity: 0, scale: 0.95, y: 16 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.9, y: 20 }}
-          transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+          exit={{
+            opacity: 0,
+            scale: 0.97,
+            y: 8,
+            transition: { duration: 0.15, ease: 'easeOut' },
+          }}
+          transition={{ type: 'spring', duration: 0.4, bounce: 0 }}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Close button */}
@@ -93,35 +106,35 @@ export function MemoryModal() {
 
           {/* Header */}
           <div className="modal-header">
-            <h1 className="city-title">{selectedCity.name}</h1>
-            <p className="city-country-large">{selectedCity.country}</p>
+            <h1 className="city-title">{city.name}</h1>
+            <p className="city-country-large">{city.country}</p>
             <div className="visit-dates">
-              {selectedCity.dates.length === 0 ? (
+              {city.dates.length === 0 ? (
                 <span>No date recorded</span>
-              ) : selectedCity.dates.length === 1 ? (
-                <span>{formatDate(selectedCity.dates[0])}</span>
+              ) : city.dates.length === 1 ? (
+                <span>{formatDate(city.dates[0])}</span>
               ) : (
                 <span>
-                  {formatDate(selectedCity.dates[0])} — {formatDate(selectedCity.dates[selectedCity.dates.length - 1])}
+                  {formatDate(city.dates[0])} — {formatDate(city.dates[city.dates.length - 1])}
                 </span>
               )}
             </div>
           </div>
 
           {/* Photo Gallery */}
-          {selectedCity.photos.length > 0 && (
+          {city.photos.length > 0 && (
             <div className="gallery-section">
               <div className="main-image-container">
                 <motion.img
                   key={currentImageIndex}
-                  src={selectedCity.photos[currentImageIndex]}
-                  alt={`${selectedCity.name} photo ${currentImageIndex + 1}`}
+                  src={city.photos[currentImageIndex]}
+                  alt={`${city.name} photo ${currentImageIndex + 1}`}
                   className="main-image"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.3 }}
                 />
-                {selectedCity.photos.length > 1 && (
+                {city.photos.length > 1 && (
                   <>
                     <button className="gallery-nav prev" onClick={prevImage}>
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -136,14 +149,14 @@ export function MemoryModal() {
                   </>
                 )}
                 <div className="image-counter">
-                  {currentImageIndex + 1} / {selectedCity.photos.length}
+                  {currentImageIndex + 1} / {city.photos.length}
                 </div>
               </div>
 
               {/* Thumbnail strip */}
-              {selectedCity.photos.length > 1 && (
+              {city.photos.length > 1 && (
                 <div className="thumbnail-strip">
-                  {selectedCity.photos.map((photo, index) => (
+                  {city.photos.map((photo, index) => (
                     <button
                       key={index}
                       className={`thumbnail ${index === currentImageIndex ? 'active' : ''}`}
@@ -158,11 +171,11 @@ export function MemoryModal() {
           )}
 
           {/* Videos */}
-          {selectedCity.videos.length > 0 && (
+          {city.videos.length > 0 && (
             <div className="videos-section">
               <h3>Videos</h3>
               <div className="video-grid">
-                {selectedCity.videos.map((video, index) => (
+                {city.videos.map((video, index) => (
                   <div key={index} className="video-container">
                     <video
                       src={video}
@@ -176,17 +189,17 @@ export function MemoryModal() {
           )}
 
           {/* Memories text */}
-          {selectedCity.memories && (
+          {city.memories && (
             <div className="memories-section">
               <h3>Memories</h3>
-              <p className="memories-text">{selectedCity.memories}</p>
+              <p className="memories-text">{city.memories}</p>
             </div>
           )}
 
           {/* Tags */}
-          {selectedCity.tags.length > 0 && (
+          {city.tags.length > 0 && (
             <div className="tags-section">
-              {selectedCity.tags.map((tag, index) => (
+              {city.tags.map((tag, index) => (
                 <span key={index} className="tag">
                   {tag}
                 </span>
@@ -200,9 +213,9 @@ export function MemoryModal() {
       <ShareFlightModal
         isOpen={isShareModalOpen}
         onClose={() => setShareModalOpen(false)}
-        cityId={selectedCity.id}
-        cityName={selectedCity.name}
+        cityId={city.id}
+        cityName={city.name}
       />
-    </AnimatePresence>
+    </>
   );
 }

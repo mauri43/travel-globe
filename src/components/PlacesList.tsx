@@ -236,23 +236,25 @@ export function PlacesList() {
     setPlacesListOpen(false);
   };
 
-  if (!isPlacesListOpen) return null;
-
+  // The open gate lives inside AnimatePresence so exit animations can run
   return (
     <AnimatePresence>
+      {isPlacesListOpen && (
       <motion.div
         className="places-overlay"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
+        exit={{ opacity: 0, transition: { duration: 0.3, ease: 'easeOut' } }}
+        transition={{ duration: 0.2, ease: 'easeOut' }}
         onClick={() => setPlacesListOpen(false)}
       >
         <motion.div
           className="places-panel"
-          initial={{ opacity: 0, x: -100 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -100 }}
-          transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+          // Slide by the panel's own width — no fade; drawers move, they don't dissolve
+          initial={{ x: '-105%' }}
+          animate={{ x: 0 }}
+          exit={{ x: '-105%', transition: { duration: 0.35, ease: [0.32, 0.72, 0, 1] } }}
+          transition={{ type: 'spring', duration: 0.5, bounce: 0 }}
           onClick={(e) => e.stopPropagation()}
         >
           <div className="places-header">
@@ -467,6 +469,7 @@ export function PlacesList() {
           </div>
         </motion.div>
       </motion.div>
+      )}
     </AnimatePresence>
   );
 }

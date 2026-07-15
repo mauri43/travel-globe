@@ -52,10 +52,32 @@
   --glass-bg: rgba(18, 18, 26, 0.85);
   --glass-border: rgba(255, 255, 255, 0.08);
 
+  /* Easing curves — built-in CSS easings are too weak for deliberate motion */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);      /* strong ease-out for enters/exits */
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);  /* strong ease-in-out for on-screen movement */
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);   /* iOS-like drawer curve */
+
   /* Transitions */
   --transition-fast: 150ms ease;
   --transition-normal: 250ms ease;
   --transition-slow: 400ms ease;
+
+  /* Interactive-state transitions: specific properties only (never `all`).
+     Colors use `ease`; transform uses a strong ease-out for press feedback. */
+  --transition-interactive:
+    background-color 150ms ease,
+    color 150ms ease,
+    border-color 150ms ease,
+    box-shadow 150ms ease,
+    opacity 150ms ease,
+    transform 160ms var(--ease-out);
+  --transition-interactive-normal:
+    background-color 250ms ease,
+    color 250ms ease,
+    border-color 250ms ease,
+    box-shadow 250ms ease,
+    opacity 250ms ease,
+    transform 250ms var(--ease-out);
 }
 
 /* Reset & Base */
@@ -182,13 +204,26 @@ body {
   font-family: var(--font-mono);
   font-size: 0.75rem;
   cursor: pointer;
-  transition: var(--transition-fast);
+  transition: var(--transition-interactive);
 }
 
 .places-list-btn:hover {
   background: var(--void-border);
   color: var(--cyan-glow);
   border-color: var(--cyan-dim);
+}
+
+/* Press feedback — every pressable element confirms the press instantly.
+   Subtle scale (0.97), 160ms strong ease-out via --transition-interactive. */
+.places-list-btn:active,
+.sort-btn:active,
+.tag-filter-btn:active,
+.places-close:active,
+.place-edit:active,
+.modal-close:active,
+.modal-edit:active,
+.modal-share:active {
+  transform: scale(0.97);
 }
 
 .places-list-btn svg {
@@ -228,8 +263,13 @@ body {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
   opacity: 0;
   visibility: hidden;
-  transform: translateY(-4px);
-  transition: all var(--transition-fast);
+  transform: translateY(-4px) scale(0.97);
+  transform-origin: top right; /* scale from the stat that triggers it */
+  /* Exit timing (base state = exit): snappier than enter */
+  transition:
+    opacity 100ms var(--ease-out),
+    transform 100ms var(--ease-out),
+    visibility 100ms;
   white-space: nowrap;
   z-index: 150;
 }
@@ -237,7 +277,12 @@ body {
 .stat-with-tooltip:hover .miles-tooltip {
   opacity: 1;
   visibility: visible;
-  transform: translateY(0);
+  transform: translateY(0) scale(1);
+  /* Enter timing */
+  transition:
+    opacity 150ms var(--ease-out),
+    transform 150ms var(--ease-out),
+    visibility 150ms;
 }
 
 .tooltip-row {
@@ -325,7 +370,7 @@ body {
   font-family: var(--font-mono);
   font-size: 0.75rem;
   cursor: pointer;
-  transition: var(--transition-fast);
+  transition: var(--transition-interactive);
 }
 
 .login-btn {
@@ -464,7 +509,7 @@ body {
   box-shadow:
     0 4px 20px rgba(255, 107, 53, 0.4),
     0 0 40px rgba(255, 107, 53, 0.2);
-  transition: var(--transition-normal);
+  transition: var(--transition-interactive-normal);
 }
 
 .add-button:hover {
@@ -560,7 +605,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: var(--transition-fast);
+  transition: var(--transition-interactive);
   z-index: 10;
 }
 
@@ -659,7 +704,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: var(--transition-fast);
+  transition: var(--transition-interactive);
   opacity: 0.8;
 }
 
@@ -719,7 +764,7 @@ body {
   border-radius: 6px;
   overflow: hidden;
   cursor: pointer;
-  transition: var(--transition-fast);
+  transition: var(--transition-interactive);
   background: transparent;
   padding: 0;
 }
@@ -808,7 +853,7 @@ body {
   color: var(--text-tertiary);
   text-transform: lowercase;
   letter-spacing: 0.05em;
-  transition: var(--transition-fast);
+  transition: var(--transition-interactive);
 }
 
 .tag:hover {
@@ -871,7 +916,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: var(--transition-fast);
+  transition: var(--transition-interactive);
 }
 
 .admin-close:hover {
@@ -925,7 +970,7 @@ body {
   font-family: var(--font-body);
   font-size: 0.95rem;
   color: var(--text-primary);
-  transition: var(--transition-fast);
+  transition: var(--transition-interactive);
 }
 
 .form-group input:focus,
@@ -1008,7 +1053,7 @@ body {
   background: transparent;
   border: none;
   cursor: pointer;
-  transition: var(--transition-fast);
+  transition: var(--transition-interactive);
   text-align: left;
 }
 
@@ -1101,7 +1146,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: var(--transition-fast);
+  transition: var(--transition-interactive);
 }
 
 .remove-btn:hover {
@@ -1123,7 +1168,7 @@ body {
   font-size: 0.85rem;
   color: var(--text-tertiary);
   cursor: pointer;
-  transition: var(--transition-fast);
+  transition: var(--transition-interactive);
 }
 
 .add-date-btn:hover {
@@ -1152,7 +1197,7 @@ body {
   font-family: var(--font-body);
   font-size: 0.95rem;
   color: var(--text-primary);
-  transition: var(--transition-fast);
+  transition: var(--transition-interactive);
 }
 
 .date-picker-input:focus {
@@ -1172,7 +1217,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: var(--transition-fast);
+  transition: var(--transition-interactive);
   flex-shrink: 0;
 }
 
@@ -1220,7 +1265,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: var(--transition-fast);
+  transition: var(--transition-interactive);
 }
 
 .date-picker-year-nav button:hover,
@@ -1282,7 +1327,7 @@ body {
   font-size: 0.85rem;
   color: var(--text-secondary);
   cursor: pointer;
-  transition: var(--transition-fast);
+  transition: var(--transition-interactive);
 }
 
 .date-picker-day:hover:not(.empty):not(.selected) {
@@ -1324,7 +1369,7 @@ body {
   font-size: 0.7rem;
   color: var(--text-secondary);
   cursor: pointer;
-  transition: var(--transition-fast);
+  transition: var(--transition-interactive);
 }
 
 .date-picker-today-btn:hover {
@@ -1345,7 +1390,7 @@ body {
   border: 2px dashed var(--void-border);
   border-radius: 12px;
   text-align: center;
-  transition: var(--transition-fast);
+  transition: var(--transition-interactive);
 }
 
 .upload-zone.drag-active {
@@ -1381,7 +1426,7 @@ body {
   font-size: 0.85rem;
   color: var(--text-secondary);
   cursor: pointer;
-  transition: var(--transition-fast);
+  transition: var(--transition-interactive);
 }
 
 .upload-buttons button:hover {
@@ -1426,7 +1471,7 @@ body {
   align-items: center;
   justify-content: center;
   opacity: 0;
-  transition: var(--transition-fast);
+  transition: var(--transition-interactive);
 }
 
 .preview-item:hover .preview-remove {
@@ -1479,7 +1524,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: var(--transition-fast);
+  transition: var(--transition-interactive);
   padding: 0;
 }
 
@@ -1510,7 +1555,7 @@ body {
   font-size: 0.85rem;
   color: var(--text-secondary);
   cursor: pointer;
-  transition: var(--transition-fast);
+  transition: var(--transition-interactive);
 }
 
 .tag-input-row button:hover {
@@ -1544,7 +1589,7 @@ body {
   font-size: 0.85rem;
   color: var(--text-secondary);
   cursor: pointer;
-  transition: var(--transition-fast);
+  transition: var(--transition-interactive);
 }
 
 .tag-suggestion-item:hover {
@@ -1585,7 +1630,7 @@ body {
   font-size: 0.7rem;
   color: var(--text-tertiary);
   cursor: pointer;
-  transition: var(--transition-fast);
+  transition: var(--transition-interactive);
 }
 
 .tag-quick-item:hover {
@@ -1614,7 +1659,7 @@ body {
   font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
-  transition: var(--transition-fast);
+  transition: var(--transition-interactive);
 }
 
 .delete-btn {
@@ -1712,7 +1757,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: var(--transition-fast);
+  transition: var(--transition-interactive);
 }
 
 .places-close:hover {
@@ -1754,7 +1799,7 @@ body {
   font-size: 0.65rem;
   color: var(--text-tertiary);
   cursor: pointer;
-  transition: var(--transition-fast);
+  transition: var(--transition-interactive);
 }
 
 .sort-btn:hover {
@@ -1879,7 +1924,36 @@ body {
   border: 1px solid transparent;
   border-radius: 10px;
   cursor: pointer;
-  transition: var(--transition-fast);
+  transition: var(--transition-interactive);
+  /* Staggered entrance when the panel opens — decorative, never blocks interaction */
+  opacity: 0;
+  transform: translateY(8px);
+  animation: place-item-in 300ms var(--ease-out) forwards;
+}
+
+/* 40ms cascade, capped at 8 items — everything after appears with the last delay */
+.country-cities .place-item:nth-child(1),
+.places-flat-list .place-item:nth-child(1) { animation-delay: 0ms; }
+.country-cities .place-item:nth-child(2),
+.places-flat-list .place-item:nth-child(2) { animation-delay: 40ms; }
+.country-cities .place-item:nth-child(3),
+.places-flat-list .place-item:nth-child(3) { animation-delay: 80ms; }
+.country-cities .place-item:nth-child(4),
+.places-flat-list .place-item:nth-child(4) { animation-delay: 120ms; }
+.country-cities .place-item:nth-child(5),
+.places-flat-list .place-item:nth-child(5) { animation-delay: 160ms; }
+.country-cities .place-item:nth-child(6),
+.places-flat-list .place-item:nth-child(6) { animation-delay: 200ms; }
+.country-cities .place-item:nth-child(7),
+.places-flat-list .place-item:nth-child(7) { animation-delay: 240ms; }
+.country-cities .place-item:nth-child(n + 8),
+.places-flat-list .place-item:nth-child(n + 8) { animation-delay: 280ms; }
+
+@keyframes place-item-in {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .place-item:hover {
@@ -1952,7 +2026,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: var(--transition-fast);
+  transition: var(--transition-interactive);
   opacity: 0;
   flex-shrink: 0;
 }
@@ -2075,7 +2149,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: var(--transition-fast);
+  transition: var(--transition-interactive);
   position: relative;
 }
 
@@ -2141,7 +2215,7 @@ body {
   color: var(--text-tertiary);
   cursor: pointer;
   text-align: left;
-  transition: var(--transition-fast);
+  transition: var(--transition-interactive);
 }
 
 .filter-menu-clear:hover {
@@ -2155,7 +2229,7 @@ body {
   padding: var(--space-sm) var(--space-md);
   border-radius: 8px;
   cursor: pointer;
-  transition: var(--transition-fast);
+  transition: var(--transition-interactive);
   color: var(--text-secondary);
 }
 
@@ -2261,7 +2335,7 @@ body {
   border: none;
   border-radius: 6px;
   cursor: pointer;
-  transition: var(--transition-fast);
+  transition: var(--transition-interactive);
   text-align: left;
 }
 
@@ -2345,7 +2419,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: var(--transition-fast);
+  transition: var(--transition-interactive);
 }
 
 .refresh-btn:hover {
@@ -2406,7 +2480,7 @@ body {
   background: transparent;
   border: none;
   cursor: pointer;
-  transition: var(--transition-fast);
+  transition: var(--transition-interactive);
   text-align: left;
   font-family: var(--font-body);
   font-size: 0.9rem;
@@ -2475,7 +2549,7 @@ body {
   font-family: var(--font-body);
   font-size: 0.95rem;
   color: var(--text-primary);
-  transition: var(--transition-fast);
+  transition: var(--transition-interactive);
 }
 
 .auth-modal input:focus {
@@ -2509,7 +2583,7 @@ body {
   font-weight: 600;
   color: var(--void-black);
   cursor: pointer;
-  transition: var(--transition-fast);
+  transition: var(--transition-interactive);
 }
 
 .auth-submit:hover:not(:disabled) {
@@ -2581,7 +2655,7 @@ body {
   font-family: var(--font-mono);
   font-size: 0.75rem;
   cursor: pointer;
-  transition: var(--transition-fast);
+  transition: var(--transition-interactive);
 }
 
 .user-menu-btn:hover {
@@ -2619,7 +2693,7 @@ body {
   font-family: var(--font-body);
   font-size: 0.9rem;
   cursor: pointer;
-  transition: var(--transition-fast);
+  transition: var(--transition-interactive);
   text-align: left;
 }
 
@@ -2780,7 +2854,7 @@ body {
   font-size: 0.9rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: var(--transition-interactive);
 }
 
 .nav-btn-ghost:hover {
@@ -2798,7 +2872,7 @@ body {
   font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: var(--transition-interactive);
 }
 
 .nav-btn-primary:hover {
@@ -2893,7 +2967,7 @@ body {
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all var(--transition-normal);
+  transition: var(--transition-interactive-normal);
   box-shadow: 0 4px 20px rgba(0, 245, 255, 0.3);
 }
 
@@ -2922,7 +2996,7 @@ body {
   font-size: 1rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: var(--transition-interactive);
 }
 
 .hero-btn-secondary:hover {
@@ -3149,7 +3223,7 @@ body {
   align-items: center;
   justify-content: center;
   z-index: 100;
-  transition: all var(--transition-fast);
+  transition: var(--transition-interactive);
 }
 
 .settings-btn:hover {
@@ -3162,7 +3236,7 @@ body {
   width: 22px;
   height: 22px;
   color: var(--text-secondary);
-  transition: all var(--transition-fast);
+  transition: var(--transition-interactive);
 }
 
 .settings-btn:hover svg {
@@ -3220,7 +3294,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all var(--transition-fast);
+  transition: var(--transition-interactive);
 }
 
 .settings-close:hover {
@@ -3305,7 +3379,7 @@ body {
   font-family: var(--font-body);
   font-size: 0.9rem;
   color: var(--text-primary);
-  transition: var(--transition-fast);
+  transition: var(--transition-interactive);
 }
 
 .default-origin-search input:focus {
@@ -3362,7 +3436,7 @@ body {
   font-size: 0.9rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: var(--transition-interactive);
 }
 
 .settings-account-info .logout-btn:hover {
@@ -3408,7 +3482,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all var(--transition-fast);
+  transition: var(--transition-interactive);
 }
 
 .remove-email-btn:hover:not(:disabled) {
@@ -3445,7 +3519,7 @@ body {
   font-family: var(--font-body);
   font-size: 0.9rem;
   color: var(--text-primary);
-  transition: all var(--transition-fast);
+  transition: var(--transition-interactive);
 }
 
 .add-email-form input:focus {
@@ -3468,7 +3542,7 @@ body {
   font-size: 0.9rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: var(--transition-interactive);
 }
 
 .add-email-btn:hover:not(:disabled) {
@@ -3694,7 +3768,7 @@ body {
   height: 8px;
   border-radius: 50%;
   background: var(--void-border);
-  transition: all var(--transition-fast);
+  transition: var(--transition-interactive);
 }
 
 .tour-progress-dot.active {
@@ -3730,7 +3804,7 @@ body {
   font-weight: 600;
   font-size: 0.95rem;
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: var(--transition-interactive);
 }
 
 .tour-button:hover {
@@ -3756,7 +3830,7 @@ body {
   font-family: var(--font-mono);
   font-size: 0.85rem;
   cursor: pointer;
-  transition: var(--transition-fast);
+  transition: var(--transition-interactive);
   width: 100%;
   justify-content: center;
   margin-top: var(--space-md);
@@ -3791,7 +3865,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: var(--transition-normal);
+  transition: var(--transition-interactive-normal);
   backdrop-filter: blur(12px);
   z-index: 100;
 }
@@ -3878,7 +3952,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: var(--transition-fast);
+  transition: var(--transition-interactive);
 }
 
 .theme-close:hover {
@@ -3998,7 +4072,7 @@ body {
   border: 1px solid var(--void-border);
   border-radius: 12px;
   cursor: pointer;
-  transition: var(--transition-normal);
+  transition: var(--transition-interactive-normal);
   text-align: left;
   color: var(--text-primary);
   width: 100%;
@@ -4028,7 +4102,7 @@ body {
   border-radius: 50%;
   flex-shrink: 0;
   border: 2px solid transparent;
-  transition: var(--transition-normal);
+  transition: var(--transition-interactive-normal);
 }
 
 .theme-preview-orb.selected {
@@ -4041,7 +4115,7 @@ body {
   border-radius: 50%;
   border: 1px solid;
   opacity: 0;
-  transition: var(--transition-normal);
+  transition: var(--transition-interactive-normal);
 }
 
 .theme-preview-orb.selected .orb-glow-ring {
@@ -4129,7 +4203,7 @@ body {
   background: rgba(10, 10, 15, 0.5);
   border-radius: 11px;
   opacity: 0;
-  transition: var(--transition-fast);
+  transition: var(--transition-interactive);
 }
 
 .theme-card.locked:hover .lock-overlay {
@@ -4392,7 +4466,7 @@ body {
   font-size: 0.9rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: var(--transition-interactive);
 }
 
 .import-csv-btn:hover:not(:disabled) {
@@ -4498,7 +4572,7 @@ body {
   font-size: 0.85rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: var(--transition-interactive);
 }
 
 .social-setting-btn:hover {
@@ -4524,7 +4598,7 @@ body {
   font-size: 0.85rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: var(--transition-interactive);
 }
 
 .social-toggle-buttons .toggle-btn:first-child {
@@ -4555,7 +4629,7 @@ body {
   font-family: var(--font-body);
   font-size: 0.85rem;
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: var(--transition-interactive);
 }
 
 .social-select:focus {
@@ -4595,7 +4669,7 @@ body {
   font-size: 0.9rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: var(--transition-interactive);
 }
 
 .clear-flights-btn:hover:not(:disabled) {
@@ -4627,7 +4701,7 @@ body {
   color: var(--text-secondary);
   font-size: 0.85rem;
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: var(--transition-interactive);
 }
 
 .cancel-clear-btn:hover:not(:disabled) {
@@ -4638,4 +4712,50 @@ body {
 .cancel-clear-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* ================================================
+   REDUCED MOTION
+   Fewer and gentler animations, not zero — keep
+   opacity/color feedback, remove positional movement.
+   ================================================ */
+@media (prefers-reduced-motion: reduce) {
+  /* List stagger: show items immediately, no movement */
+  .place-item {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Tooltip: keep the fade, drop the slide/scale */
+  .miles-tooltip {
+    transform: none;
+  }
+  .stat-with-tooltip:hover .miles-tooltip {
+    transform: none;
+  }
+
+  /* Press feedback: keep color feedback, drop the scale */
+  .places-list-btn:active,
+  .sort-btn:active,
+  .tag-filter-btn:active,
+  .places-close:active,
+  .place-edit:active,
+  .modal-close:active,
+  .modal-edit:active,
+  .modal-share:active {
+    transform: none;
+  }
+
+  /* Decorative infinite loops off (spinners stay — they aid comprehension) */
+  .add-button,
+  .badge-dot,
+  .globe-preview-glow,
+  .globe-preview-core,
+  .ring-1,
+  .ring-2,
+  .ring-3,
+  .theme-preview-orb.selected .orb-glow-ring {
+    animation: none;
+  }
 }

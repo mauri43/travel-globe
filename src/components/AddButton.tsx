@@ -8,11 +8,12 @@ export function AddButton() {
     <motion.button
       className="add-button"
       onClick={() => setAdminOpen(true)}
-      whileHover={{ scale: 1.1 }}
-      whileTap={{ scale: 0.95 }}
+      // Hit constantly — keep motion subtle and snappy
+      whileHover={{ scale: 1.05, transition: { duration: 0.15, ease: 'easeOut' } }}
+      whileTap={{ scale: 0.97, transition: { duration: 0.1, ease: 'easeOut' } }}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.5 }}
+      transition={{ delay: 0.5, type: 'spring', duration: 0.5, bounce: 0.2 }}
       data-tour-target="add-button"
     >
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
